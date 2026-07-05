@@ -1,12 +1,15 @@
-import { BRAND_NAME, HOTLINE_DISPLAY } from '../lib/constants'
+import { BRAND_NAME, HOTLINE_DISPLAY, LOGO_ICON } from '../lib/constants'
 
 export function Footer() {
   return (
-    <footer className="mt-16 border-t border-slate-200 bg-white">
-      <div className="mx-auto max-w-6xl px-4 py-8 text-center text-sm text-slate-500 sm:px-6">
-        <p className="font-semibold text-slate-700">{BRAND_NAME}</p>
-        <p className="mt-1">Hotline tư vấn: {HOTLINE_DISPLAY}</p>
-        <p className="mt-4 text-xs text-slate-400">
+    <footer className="mt-16 bg-brand-800">
+      <div className="mx-auto flex max-w-6xl flex-col items-center gap-3 px-4 py-10 text-center text-sm text-brand-100 sm:px-6">
+        <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white p-1.5 shadow-sm">
+          <img src={LOGO_ICON} alt="" className="h-full w-full" />
+        </span>
+        <p className="font-semibold text-white">{BRAND_NAME}</p>
+        <p>Hotline tư vấn: {HOTLINE_DISPLAY}</p>
+        <p className="mt-2 text-xs text-brand-300">
           © {new Date().getFullYear()} — Thông tin đất được cập nhật định kỳ từ hệ thống nội bộ.
         </p>
       </div>

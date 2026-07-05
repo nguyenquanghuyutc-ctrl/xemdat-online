@@ -13,7 +13,7 @@ export function ContactCTA({ className = '' }: ContactCTAProps) {
       <div className="mt-3 flex flex-col gap-3 sm:flex-row">
         <a
           href={`tel:${HOTLINE}`}
-          className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 py-3 font-semibold text-white transition hover:bg-brand-700 active:scale-[0.98]"
+          className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-accent-500 px-5 py-3 font-semibold text-white transition hover:bg-accent-600 active:scale-[0.98]"
         >
           <PhoneIcon />
           Gọi {HOTLINE_DISPLAY}

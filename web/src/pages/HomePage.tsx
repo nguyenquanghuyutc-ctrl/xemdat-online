@@ -13,9 +13,13 @@ export function HomePage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-      <section className="mb-8 rounded-3xl bg-gradient-to-br from-brand-700 to-brand-500 px-6 py-10 text-white sm:px-10 sm:py-14">
-        <h1 className="text-2xl font-bold sm:text-4xl">Quỹ đất công nghiệp uy tín</h1>
-        <p className="mt-3 max-w-2xl text-sm text-brand-50 sm:text-base">
+      <section className="relative mb-8 overflow-hidden rounded-3xl bg-gradient-to-br from-brand-900 via-brand-800 to-brand-600 px-6 py-10 text-white sm:px-10 sm:py-14">
+        <span className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-accent-500/20 sm:h-56 sm:w-56" />
+        <span className="mb-3 inline-block rounded-full bg-accent-500 px-3 py-1 text-xs font-semibold tracking-wide uppercase">
+          Uy tín · Minh bạch · Chuyên nghiệp
+        </span>
+        <h1 className="relative text-2xl font-bold sm:text-4xl">Quỹ đất công nghiệp uy tín</h1>
+        <p className="relative mt-3 max-w-2xl text-sm text-brand-100 sm:text-base">
           {BRAND_NAME} — cập nhật liên tục các lô đất đang mở bán, đầy đủ hình ảnh,
           vị trí và pháp lý minh bạch.
         </p>

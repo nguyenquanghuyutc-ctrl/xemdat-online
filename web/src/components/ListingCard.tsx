@@ -27,7 +27,7 @@ export function ListingCard({ listing }: ListingCardProps) {
             Chưa có ảnh
           </div>
         )}
-        <span className="absolute left-3 top-3 rounded-full bg-brand-600 px-3 py-1 text-xs font-semibold text-white shadow">
+        <span className="absolute left-3 top-3 rounded-full bg-accent-500 px-3 py-1 text-xs font-semibold text-white shadow">
           {listing.statusLabel}
         </span>
       </div>
@@ -37,7 +37,7 @@ export function ListingCard({ listing }: ListingCardProps) {
         <p className="line-clamp-2 text-sm text-slate-500">{listing.address}</p>
 
         <div className="mt-auto flex items-center justify-between pt-2">
-          <span className="text-lg font-bold text-brand-700">
+          <span className="text-lg font-bold text-accent-600">
             {formatPrice(listing.price, listing.priceDisplay)}
           </span>
           <span className="text-sm text-slate-500">{formatArea(listing.area)}</span>

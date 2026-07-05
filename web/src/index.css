@@ -1,16 +1,29 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-50: #eff6ff;
-  --color-brand-100: #dbeafe;
-  --color-brand-200: #bfdbfe;
-  --color-brand-300: #93c5fd;
-  --color-brand-400: #60a5fa;
-  --color-brand-500: #3b82f6;
-  --color-brand-600: #2563eb;
-  --color-brand-700: #1d4ed8;
-  --color-brand-800: #1e40af;
-  --color-brand-900: #1e3a8a;
+  /* Navy — lấy chính xác từ logo HABAKI (#0f3055) */
+  --color-brand-50: #eef3f8;
+  --color-brand-100: #d9e4ee;
+  --color-brand-200: #b3c9dd;
+  --color-brand-300: #82a6c6;
+  --color-brand-400: #4f7ea8;
+  --color-brand-500: #2f5d86;
+  --color-brand-600: #1c4468;
+  --color-brand-700: #123655;
+  --color-brand-800: #0f3055;
+  --color-brand-900: #0a2038;
+
+  /* Cam — lấy chính xác từ bánh răng trong logo HABAKI (#d67e24) */
+  --color-accent-50: #fdf3e7;
+  --color-accent-100: #fbe4c4;
+  --color-accent-200: #f6c98a;
+  --color-accent-300: #f0ab52;
+  --color-accent-400: #e8952e;
+  --color-accent-500: #d67e24;
+  --color-accent-600: #b8651a;
+  --color-accent-700: #925015;
+  --color-accent-800: #6d3c10;
+  --color-accent-900: #4a290b;
 
   --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
 }

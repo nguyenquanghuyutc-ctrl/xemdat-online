@@ -44,7 +44,7 @@ export function ListingDetailPage() {
 
         <div className="flex flex-col gap-5 lg:col-span-2">
           <div>
-            <span className="mb-2 inline-block rounded-full bg-brand-600 px-3 py-1 text-xs font-semibold text-white">
+            <span className="mb-2 inline-block rounded-full bg-accent-500 px-3 py-1 text-xs font-semibold text-white">
               {listing.statusLabel}
             </span>
             <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">{listing.title}</h1>
@@ -79,7 +79,7 @@ function Info({ label, value, highlight }: { label: string; value: string; highl
   return (
     <div>
       <p className="text-xs text-slate-400">{label}</p>
-      <p className={highlight ? 'font-bold text-brand-700' : 'font-medium text-slate-800'}>{value}</p>
+      <p className={highlight ? 'font-bold text-accent-600' : 'font-medium text-slate-800'}>{value}</p>
     </div>
   )
 }
