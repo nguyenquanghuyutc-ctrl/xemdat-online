@@ -3,7 +3,7 @@ import { useListings } from '../data/useListings'
 import { FilterBar } from '../components/FilterBar'
 import { ListingCard } from '../components/ListingCard'
 import { applyFilters, DEFAULT_FILTERS } from '../lib/filters'
-import { BRAND_NAME } from '../lib/constants'
+import { BRAND_NAME, BRAND_REGION } from '../lib/constants'
 
 export function HomePage() {
   const { listings, loading, error } = useListings()
@@ -11,41 +11,77 @@ export function HomePage() {
 
   const filtered = useMemo(() => applyFilters(listings, filters), [listings, filters])
 
+  const stats = useMemo(() => {
+    const totalArea = listings.reduce((sum, l) => sum + (l.area ?? 0), 0)
+    const zones = new Set(listings.map((l) => l.address).filter(Boolean))
+    return {
+      count: listings.length,
+      areaHa: totalArea / 10000,
+      zones: zones.size,
+    }
+  }, [listings])
+
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-      <section className="relative mb-8 overflow-hidden rounded-3xl bg-gradient-to-br from-brand-900 via-brand-800 to-brand-600 px-6 py-10 text-white sm:px-10 sm:py-14">
-        <span className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-accent-500/20 sm:h-56 sm:w-56" />
-        <span className="mb-3 inline-block rounded-full bg-accent-500 px-3 py-1 text-xs font-semibold tracking-wide uppercase">
-          Uy tín · Minh bạch · Chuyên nghiệp
-        </span>
-        <h1 className="relative text-2xl font-bold sm:text-4xl">Quỹ đất công nghiệp uy tín</h1>
-        <p className="relative mt-3 max-w-2xl text-sm text-brand-100 sm:text-base">
-          {BRAND_NAME} — cập nhật liên tục các lô đất đang mở bán, đầy đủ hình ảnh,
-          vị trí và pháp lý minh bạch.
-        </p>
+    <div>
+      <section className="relative overflow-hidden bg-gradient-to-br from-brand-900 via-brand-800 to-brand-600 px-4 pb-24 pt-10 text-white sm:px-6 sm:pb-32 sm:pt-14">
+        <span className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-accent-500/20 sm:h-64 sm:w-64" />
+        <span className="pointer-events-none absolute -left-16 bottom-0 h-32 w-32 rounded-full bg-white/5 sm:h-48 sm:w-48" />
+
+        <div className="relative mx-auto max-w-6xl">
+          <span className="mb-3 inline-block rounded-full bg-accent-500 px-3 py-1 text-xs font-semibold uppercase tracking-wide">
+            Uy tín · Minh bạch · Chuyên nghiệp
+          </span>
+          <h1 className="max-w-2xl text-2xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">
+            Đất công nghiệp {BRAND_REGION}
+          </h1>
+          <p className="mt-3 max-w-2xl text-sm text-brand-100 sm:text-base">
+            {BRAND_NAME} — quỹ đất công nghiệp {BRAND_REGION} được thẩm định kỹ, cập nhật
+            liên tục hình ảnh, vị trí thực tế và pháp lý minh bạch cho khách hàng tại {BRAND_REGION} và
+            các vùng lân cận.
+          </p>
+
+          <div className="mt-8 grid grid-cols-3 gap-3 border-t border-white/15 pt-6 sm:max-w-lg">
+            <Stat value={`${stats.count}+`} label="Lô đất đang bán" />
+            <Stat value={stats.areaHa >= 1 ? `${stats.areaHa.toFixed(1)} ha` : '—'} label="Tổng diện tích" />
+            <Stat value={`${stats.zones}+`} label={`Khu vực tại ${BRAND_REGION}`} />
+          </div>
+        </div>
       </section>
 
-      <div className="mb-6">
-        <FilterBar listings={listings} filters={filters} onChange={setFilters} />
-      </div>
+      <div className="mx-auto -mt-14 max-w-6xl px-4 sm:-mt-16 sm:px-6">
+        <div className="rounded-2xl bg-white p-4 shadow-xl shadow-brand-900/10 sm:p-5">
+          <FilterBar listings={listings} filters={filters} onChange={setFilters} />
+        </div>
 
-      {loading && <StateMessage text="Đang tải danh sách đất…" />}
-      {error && <StateMessage text="Không tải được dữ liệu, vui lòng thử lại sau." isError />}
+        <div className="pb-10 pt-8">
+          {loading && <StateMessage text="Đang tải danh sách đất…" />}
+          {error && <StateMessage text="Không tải được dữ liệu, vui lòng thử lại sau." isError />}
 
-      {!loading && !error && (
-        <>
-          <p className="mb-4 text-sm text-slate-500">Tìm thấy {filtered.length} lô đất</p>
-          {filtered.length === 0 ? (
-            <StateMessage text="Không có lô đất nào phù hợp với bộ lọc." />
-          ) : (
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {filtered.map((listing) => (
-                <ListingCard key={listing.id} listing={listing} />
-              ))}
-            </div>
+          {!loading && !error && (
+            <>
+              <p className="mb-4 text-sm text-slate-500">Tìm thấy {filtered.length} lô đất</p>
+              {filtered.length === 0 ? (
+                <StateMessage text="Không có lô đất nào phù hợp với bộ lọc." />
+              ) : (
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                  {filtered.map((listing) => (
+                    <ListingCard key={listing.id} listing={listing} />
+                  ))}
+                </div>
+              )}
+            </>
           )}
-        </>
-      )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function Stat({ value, label }: { value: string; label: string }) {
+  return (
+    <div>
+      <p className="text-xl font-extrabold text-white sm:text-2xl">{value}</p>
+      <p className="text-xs text-brand-200 sm:text-sm">{label}</p>
     </div>
   )
 }

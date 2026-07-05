@@ -1,4 +1,4 @@
-import { BRAND_NAME, HOTLINE_DISPLAY, LOGO_ICON } from '../lib/constants'
+import { BRAND_NAME, BRAND_TAGLINE, HOTLINE_DISPLAY, LOGO_ICON } from '../lib/constants'
 
 export function Footer() {
   return (
@@ -8,6 +8,7 @@ export function Footer() {
           <img src={LOGO_ICON} alt="" className="h-full w-full" />
         </span>
         <p className="font-semibold text-white">{BRAND_NAME}</p>
+        <p className="text-accent-400">{BRAND_TAGLINE}</p>
         <p>Hotline tư vấn: {HOTLINE_DISPLAY}</p>
         <p className="mt-2 text-xs text-brand-300">
           © {new Date().getFullYear()} — Thông tin đất được cập nhật định kỳ từ hệ thống nội bộ.
