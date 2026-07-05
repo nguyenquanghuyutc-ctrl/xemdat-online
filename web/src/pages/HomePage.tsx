@@ -48,7 +48,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <div className="mx-auto -mt-14 max-w-6xl px-4 sm:-mt-16 sm:px-6">
+      <div className="relative z-10 mx-auto -mt-14 max-w-6xl px-4 sm:-mt-16 sm:px-6">
         <div className="rounded-2xl bg-white p-4 shadow-xl shadow-brand-900/10 sm:p-5">
           <FilterBar listings={listings} filters={filters} onChange={setFilters} />
         </div>
