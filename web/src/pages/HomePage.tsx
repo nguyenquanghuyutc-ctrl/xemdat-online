@@ -3,11 +3,14 @@ import { useListings } from '../data/useListings'
 import { FilterBar } from '../components/FilterBar'
 import { ListingCard } from '../components/ListingCard'
 import { applyFilters, DEFAULT_FILTERS } from '../lib/filters'
-import { BRAND_NAME, BRAND_REGION } from '../lib/constants'
+import { BRAND_NAME, BRAND_REGION, HOTLINE, HOTLINE_DISPLAY } from '../lib/constants'
+
+type TransactionTab = 'sale' | 'rent'
 
 export function HomePage() {
   const { listings, loading, error } = useListings()
   const [filters, setFilters] = useState(DEFAULT_FILTERS)
+  const [tab, setTab] = useState<TransactionTab>('sale')
 
   const filtered = useMemo(() => applyFilters(listings, filters), [listings, filters])
 
@@ -50,30 +53,67 @@ export function HomePage() {
 
       <div className="relative z-10 mx-auto -mt-14 max-w-6xl px-4 sm:-mt-16 sm:px-6">
         <div className="rounded-2xl bg-white p-4 shadow-xl shadow-brand-900/10 sm:p-5">
-          <FilterBar listings={listings} filters={filters} onChange={setFilters} />
-        </div>
+          <div className="mb-4 inline-flex rounded-full bg-slate-100 p-1">
+            <TabButton label="Bán đất" active={tab === 'sale'} onClick={() => setTab('sale')} />
+            <TabButton label="Cho thuê đất" active={tab === 'rent'} onClick={() => setTab('rent')} />
+          </div>
 
-        <div className="pb-10 pt-8">
-          {loading && <StateMessage text="Đang tải danh sách đất…" />}
-          {error && <StateMessage text="Không tải được dữ liệu, vui lòng thử lại sau." isError />}
+          {tab === 'sale' && <FilterBar listings={listings} filters={filters} onChange={setFilters} />}
 
-          {!loading && !error && (
-            <>
-              <p className="mb-4 text-sm text-slate-500">Tìm thấy {filtered.length} lô đất</p>
-              {filtered.length === 0 ? (
-                <StateMessage text="Không có lô đất nào phù hợp với bộ lọc." />
-              ) : (
-                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                  {filtered.map((listing) => (
-                    <ListingCard key={listing.id} listing={listing} />
-                  ))}
-                </div>
-              )}
-            </>
+          {tab === 'rent' && (
+            <p className="text-sm text-slate-500">
+              Tính năng cho thuê đất công nghiệp đang được chuẩn bị ra mắt. Gọi hotline{' '}
+              <a href={`tel:${HOTLINE}`} className="font-semibold text-brand-700">
+                {HOTLINE_DISPLAY}
+              </a>{' '}
+              để được tư vấn nhu cầu thuê đất ngay.
+            </p>
           )}
         </div>
+
+        {tab === 'sale' && (
+          <div className="pb-10 pt-8">
+            {loading && <StateMessage text="Đang tải danh sách đất…" />}
+            {error && <StateMessage text="Không tải được dữ liệu, vui lòng thử lại sau." isError />}
+
+            {!loading && !error && (
+              <>
+                <p className="mb-4 text-sm text-slate-500">Tìm thấy {filtered.length} lô đất</p>
+                {filtered.length === 0 ? (
+                  <StateMessage text="Không có lô đất nào phù hợp với bộ lọc." />
+                ) : (
+                  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                    {filtered.map((listing) => (
+                      <ListingCard key={listing.id} listing={listing} />
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {tab === 'rent' && (
+          <div className="pb-16 pt-10 text-center">
+            <StateMessage text="Chưa có tin cho thuê đất nào — quay lại sau nhé!" />
+          </div>
+        )}
       </div>
     </div>
+  )
+}
+
+function TabButton({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-full px-5 py-2.5 text-sm font-semibold transition ${
+        active ? 'bg-brand-800 text-white shadow' : 'text-slate-500 hover:text-slate-700'
+      }`}
+    >
+      {label}
+    </button>
   )
 }
 
