@@ -1,0 +1,71 @@
+name: Build and deploy
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # Chạy mỗi 30 phút để lấy dữ liệu mới nhất từ Google Sheet (qua Apps Script)
+    - cron: '*/30 * * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Lấy dữ liệu tin đất mới nhất từ Apps Script
+        env:
+          APPS_SCRIPT_URL: ${{ secrets.APPS_SCRIPT_URL }}
+        run: |
+          if [ -z "$APPS_SCRIPT_URL" ]; then
+            echo "Chưa cấu hình secret APPS_SCRIPT_URL — dùng dữ liệu mẫu có sẵn trong repo."
+            exit 0
+          fi
+
+          curl -sSL "$APPS_SCRIPT_URL?action=listings" -o web/public/data/listings.json
+
+          if ! node -e "JSON.parse(require('fs').readFileSync('web/public/data/listings.json','utf8')).listings"; then
+            echo "Dữ liệu trả về không hợp lệ, huỷ build để tránh deploy web với dữ liệu hỏng."
+            exit 1
+          fi
+
+      - name: Install dependencies
+        working-directory: web
+        run: npm ci
+
+      - name: Build
+        working-directory: web
+        run: npm run build
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,71 @@
+{
+  "listings": [
+    {
+      "id": "b5402149",
+      "title": "Đất Đông Hải",
+      "address": "Lô Đông Hải",
+      "location": { "lat": 19.873752, "lng": 105.866951 },
+      "area": 12000,
+      "titleType": "Sổ đỏ",
+      "usage": "Đất sản xuất kinh doanh",
+      "price": 10000000000,
+      "priceDisplay": "10.000.000.000",
+      "statusLabel": "Cần bán",
+      "updatedAt": "05/07/2026",
+      "images": [
+        "https://picsum.photos/seed/b5402149-1/900/675",
+        "https://picsum.photos/seed/b5402149-2/900/675",
+        "https://picsum.photos/seed/b5402149-3/900/675"
+      ]
+    },
+    {
+      "id": "demo-002",
+      "title": "Đất mặt tiền KCN Nam Định",
+      "address": "Xã Nam Cường, Nam Định",
+      "location": { "lat": 20.375, "lng": 106.168 },
+      "area": 3500,
+      "titleType": "Sổ hồng",
+      "usage": "Đất thương mại dịch vụ",
+      "price": 7200000000,
+      "priceDisplay": "7.200.000.000",
+      "statusLabel": "Cần bán",
+      "updatedAt": "04/07/2026",
+      "images": [
+        "https://picsum.photos/seed/demo002-1/900/675",
+        "https://picsum.photos/seed/demo002-2/900/675"
+      ]
+    },
+    {
+      "id": "demo-003",
+      "title": "Kho xưởng liền kề quốc lộ 1A",
+      "address": "Hoàng Mai, Nghệ An",
+      "location": { "lat": 19.294, "lng": 105.751 },
+      "area": 800,
+      "titleType": "Sổ đỏ",
+      "usage": "Đất sản xuất kinh doanh",
+      "price": 3100000000,
+      "priceDisplay": "3.100.000.000",
+      "statusLabel": "Cần bán",
+      "updatedAt": "03/07/2026",
+      "images": ["https://picsum.photos/seed/demo003-1/900/675"]
+    },
+    {
+      "id": "demo-004",
+      "title": "Lô đất khu công nghiệp mở rộng",
+      "address": "Diễn Châu, Nghệ An",
+      "location": { "lat": 18.977, "lng": 105.606 },
+      "area": 25000,
+      "titleType": "Sổ đỏ",
+      "usage": "Đất công nghiệp",
+      "price": 32000000000,
+      "priceDisplay": "32.000.000.000",
+      "statusLabel": "Cần bán",
+      "updatedAt": "02/07/2026",
+      "images": [
+        "https://picsum.photos/seed/demo004-1/900/675",
+        "https://picsum.photos/seed/demo004-2/900/675",
+        "https://picsum.photos/seed/demo004-3/900/675"
+      ]
+    }
+  ]
+}
