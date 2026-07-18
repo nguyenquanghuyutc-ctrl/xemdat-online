@@ -1,0 +1,31 @@
+{
+  "eval_id": 2,
+  "config": "without_skill",
+  "assertions": [
+    {
+      "text": "3+ tables",
+      "passed": true,
+      "evidence": "Found 'pipeline'"
+    },
+    {
+      "text": "ref relationships",
+      "passed": true,
+      "evidence": "Found 'ref →'"
+    },
+    {
+      "text": "key columns",
+      "passed": true,
+      "evidence": "Found 'key'"
+    },
+    {
+      "text": "status enum",
+      "passed": true,
+      "evidence": "Found 'enum'"
+    },
+    {
+      "text": "GPS/location",
+      "passed": true,
+      "evidence": "Found 'gps'"
+    }
+  ]
+}

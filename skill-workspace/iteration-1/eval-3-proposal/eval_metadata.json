@@ -1,0 +1,12 @@
+{
+  "eval_id": 3,
+  "eval_name": "proposal-and-pricing",
+  "prompt": "Tôi cần tạo proposal và báo giá để chào hàng cho một công ty BĐS công nghiệp muốn xây dựng hệ thống quản lý giao dịch trên AppSheet. Họ có khoảng 10 sale, 2 kế toán. Làm proposal chuyên nghiệp.",
+  "assertions": [
+    {"id": "has_three_packages", "description": "Có ít nhất 2-3 gói dịch vụ với mức giá khác nhau"},
+    {"id": "has_specific_pricing", "description": "Có giá cụ thể bằng số (VNĐ hoặc USD), không phải 'liên hệ'"},
+    {"id": "has_timeline", "description": "Có timeline triển khai cụ thể theo tuần/giai đoạn"},
+    {"id": "has_scope_of_work", "description": "Có phạm vi công việc (deliverables) được liệt kê"},
+    {"id": "has_support_terms", "description": "Có điều khoản bảo hành/support sau triển khai"}
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "eval_id": 3,
+  "config": "with_skill",
+  "assertions": [
+    {
+      "text": "2-3 packages",
+      "passed": true,
+      "evidence": "Found 'basic'"
+    },
+    {
+      "text": "specific price numbers",
+      "passed": true,
+      "evidence": "Found '45.000.000'"
+    },
+    {
+      "text": "timeline by week/phase",
+      "passed": true,
+      "evidence": "Found 'tuần 1'"
+    },
+    {
+      "text": "scope of work",
+      "passed": true,
+      "evidence": "Found 'phạm vi'"
+    },
+    {
+      "text": "support/warranty terms",
+      "passed": true,
+      "evidence": "Found 'bảo hành'"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "eval_id": 1,
+  "config": "with_skill",
+  "assertions": [
+    {
+      "text": "stage/status enum",
+      "passed": true,
+      "evidence": "Found 'quan tâm'"
+    },
+    {
+      "text": "table structure with columns",
+      "passed": true,
+      "evidence": "Found 'pipeline_sale'"
+    },
+    {
+      "text": "automation reminder",
+      "passed": true,
+      "evidence": "Found 'automation'"
+    },
+    {
+      "text": "security filter",
+      "passed": true,
+      "evidence": "Found 'security'"
+    },
+    {
+      "text": "mobile UX",
+      "passed": true,
+      "evidence": "Found 'mobile'"
+    }
+  ]
+}

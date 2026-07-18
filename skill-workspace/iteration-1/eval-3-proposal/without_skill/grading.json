@@ -1,0 +1,31 @@
+{
+  "eval_id": 3,
+  "config": "without_skill",
+  "assertions": [
+    {
+      "text": "2-3 packages",
+      "passed": true,
+      "evidence": "Found 'gói'"
+    },
+    {
+      "text": "specific price numbers",
+      "passed": false,
+      "evidence": "Not found"
+    },
+    {
+      "text": "timeline by week/phase",
+      "passed": true,
+      "evidence": "Found 'tuần 1'"
+    },
+    {
+      "text": "scope of work",
+      "passed": true,
+      "evidence": "Found 'phạm vi'"
+    },
+    {
+      "text": "support/warranty terms",
+      "passed": true,
+      "evidence": "Found 'bảo hành'"
+    }
+  ]
+}

@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eval Review</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --bg: #faf9f5;
+      --surface: #ffffff;
+      --border: #e8e6dc;
+      --text: #141413;
+      --text-muted: #b0aea5;
+      --accent: #d97757;
+      --accent-hover: #c4613f;
+      --green: #788c5d;
+      --green-bg: #eef2e8;
+      --red: #c44;
+      --red-bg: #fceaea;
+      --header-bg: #141413;
+      --header-text: #faf9f5;
+      --radius: 6px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Lora', Georgia, serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Header ---- */
+    .header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .header h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .header .instructions {
+      font-size: 0.8rem;
+      opacity: 0.7;
+      margin-top: 0.25rem;
+    }
+    .header .progress {
+      font-size: 0.875rem;
+      opacity: 0.8;
+      text-align: right;
+    }
+
+    /* ---- Main content ---- */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* ---- Sections ---- */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      flex-shrink: 0;
+    }
+    .section-header {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.75rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .section-body {
+      padding: 1rem;
+    }
+
+    /* ---- Config badge ---- */
+    .config-badge {
+      display: inline-block;
+      padding: 0.2rem 0.625rem;
+      border-radius: 9999px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-left: 0.75rem;
+      vertical-align: middle;
+    }
+    .config-badge.config-primary {
+      background: rgba(33, 150, 243, 0.12);
+      color: #1976d2;
+    }
+    .config-badge.config-baseline {
+      background: rgba(255, 193, 7, 0.15);
+      color: #f57f17;
+    }
+
+    /* ---- Prompt ---- */
+    .prompt-text {
+      white-space: pre-wrap;
+      font-size: 0.9375rem;
+      line-height: 1.6;
+    }
+
+    /* ---- Outputs ---- */
+    .output-file {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .output-file + .output-file {
+      margin-top: 1rem;
+    }
+    .output-file-header {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .output-file-header .dl-btn {
+      font-size: 0.7rem;
+      color: var(--accent);
+      text-decoration: none;
+      cursor: pointer;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-weight: 500;
+      opacity: 0.8;
+    }
+    .output-file-header .dl-btn:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+    .output-file-content {
+      padding: 0.75rem;
+      overflow-x: auto;
+    }
+    .output-file-content pre {
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    }
+    .output-file-content img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
+    .output-file-content iframe {
+      width: 100%;
+      height: 600px;
+      border: none;
+    }
+    .output-file-content table {
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+      width: 100%;
+    }
+    .output-file-content table td,
+    .output-file-content table th {
+      border: 1px solid var(--border);
+      padding: 0.375rem 0.5rem;
+      text-align: left;
+    }
+    .output-file-content table th {
+      background: var(--bg);
+      font-weight: 600;
+    }
+    .output-file-content .download-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+    .output-file-content .download-link:hover {
+      background: var(--border);
+    }
+    .empty-state {
+      color: var(--text-muted);
+      font-style: italic;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    /* ---- Feedback ---- */
+    .prev-feedback {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.625rem 0.75rem;
+      margin-top: 0.75rem;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .prev-feedback-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.25rem;
+      color: var(--text-muted);
+    }
+    .feedback-textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      resize: vertical;
+      color: var(--text);
+    }
+    .feedback-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    .feedback-status {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      min-height: 1.1em;
+    }
+
+    /* ---- Grades (collapsible) ---- */
+    .grades-toggle {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .grades-toggle:hover {
+      color: var(--accent);
+    }
+    .grades-toggle .arrow {
+      margin-right: 0.5rem;
+      transition: transform 0.15s;
+      font-size: 0.75rem;
+    }
+    .grades-toggle .arrow.open {
+      transform: rotate(90deg);
+    }
+    .grades-content {
+      display: none;
+      margin-top: 0.75rem;
+    }
+    .grades-content.open {
+      display: block;
+    }
+    .grades-summary {
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .grade-badge {
+      display: inline-block;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .grade-pass { background: var(--green-bg); color: var(--green); }
+    .grade-fail { background: var(--red-bg); color: var(--red); }
+    .assertion-list {
+      list-style: none;
+    }
+    .assertion-item {
+      padding: 0.625rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8125rem;
+    }
+    .assertion-item:last-child { border-bottom: none; }
+    .assertion-status {
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+    .assertion-status.pass { color: var(--green); }
+    .assertion-status.fail { color: var(--red); }
+    .assertion-evidence {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+      padding-left: 1.5rem;
+    }
+
+    /* ---- View tabs ---- */
+    .view-tabs {
+      display: flex;
+      gap: 0;
+      padding: 0 2rem;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .view-tab {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.625rem 1.25rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .view-tab:hover { color: var(--text); }
+    .view-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .view-panel { display: none; }
+    .view-panel.active { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+    /* ---- Benchmark view ---- */
+    .benchmark-view {
+      padding: 1.5rem 2rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .benchmark-table {
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.8125rem;
+      width: 100%;
+      margin-bottom: 1.5rem;
+    }
+    .benchmark-table th, .benchmark-table td {
+      padding: 0.625rem 0.75rem;
+      text-align: left;
+      border: 1px solid var(--border);
+    }
+    .benchmark-table th {
+      font-family: 'Poppins', sans-serif;
+      background: var(--header-bg);
+      color: var(--header-text);
+      font-weight: 500;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .benchmark-table tr:hover { background: var(--bg); }
+    .benchmark-table tr.benchmark-row-with { background: rgba(33, 150, 243, 0.06); }
+    .benchmark-table tr.benchmark-row-without { background: rgba(255, 193, 7, 0.06); }
+    .benchmark-table tr.benchmark-row-with:hover { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-without:hover { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-table tr.benchmark-row-avg { font-weight: 600; border-top: 2px solid var(--border); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-with { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-without { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-delta-positive { color: var(--green); font-weight: 600; }
+    .benchmark-delta-negative { color: var(--red); font-weight: 600; }
+    .benchmark-notes {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+    }
+    .benchmark-notes h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+    }
+    .benchmark-notes ul {
+      list-style: disc;
+      padding-left: 1.25rem;
+    }
+    .benchmark-notes li {
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      margin-bottom: 0.375rem;
+    }
+    .benchmark-empty {
+      color: var(--text-muted);
+      font-style: italic;
+      text-align: center;
+      padding: 3rem;
+    }
+
+    /* ---- Navigation ---- */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .nav-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text);
+      transition: all 0.15s;
+    }
+    .nav-btn:hover:not(:disabled) {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .nav-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .done-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .done-btn:hover {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .done-btn.ready {
+      border: none;
+      background: var(--accent);
+      color: white;
+      font-weight: 600;
+    }
+    .done-btn.ready:hover {
+      background: var(--accent-hover);
+    }
+    /* ---- Done overlay ---- */
+    .done-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+    .done-overlay.visible {
+      display: flex;
+    }
+    .done-card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 2rem 3rem;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 500px;
+    }
+    .done-card h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .done-card p {
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .done-card .btn-row {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+    .done-card button {
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    .done-card button:hover {
+      background: var(--bg);
+    }
+    /* ---- Toast ---- */
+    .toast {
+      position: fixed;
+      bottom: 5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 0.625rem 1.25rem;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 200;
+    }
+    .toast.visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" style="height:100vh; display:flex; flex-direction:column;">
+    <div class="header">
+      <div>
+        <h1>Eval Review: <span id="skill-name"></span></h1>
+        <div class="instructions">Review each output and leave feedback below. Navigate with arrow keys or buttons. When done, copy feedback and paste into Claude Code.</div>
+      </div>
+      <div class="progress" id="progress"></div>
+    </div>
+
+    <!-- View tabs (only shown when benchmark data exists) -->
+    <div class="view-tabs" id="view-tabs" style="display:none;">
+      <button class="view-tab active" onclick="switchView('outputs')">Outputs</button>
+      <button class="view-tab" onclick="switchView('benchmark')">Benchmark</button>
+    </div>
+
+    <!-- Outputs panel (qualitative review) -->
+    <div class="view-panel active" id="panel-outputs">
+    <div class="main">
+      <!-- Prompt -->
+      <div class="section">
+        <div class="section-header">Prompt <span class="config-badge" id="config-badge" style="display:none;"></span></div>
+        <div class="section-body">
+          <div class="prompt-text" id="prompt-text"></div>
+        </div>
+      </div>
+
+      <!-- Outputs -->
+      <div class="section">
+        <div class="section-header">Output</div>
+        <div class="section-body" id="outputs-body">
+          <div class="empty-state">No output files found</div>
+        </div>
+      </div>
+
+      <!-- Previous Output (collapsible) -->
+      <div class="section" id="prev-outputs-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="togglePrevOutputs()">
+            <span class="arrow" id="prev-outputs-arrow">&#9654;</span>
+            Previous Output
+          </div>
+        </div>
+        <div class="grades-content" id="prev-outputs-content"></div>
+      </div>
+
+      <!-- Grades (collapsible) -->
+      <div class="section" id="grades-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="toggleGrades()">
+            <span class="arrow" id="grades-arrow">&#9654;</span>
+            Formal Grades
+          </div>
+        </div>
+        <div class="grades-content" id="grades-content"></div>
+      </div>
+
+      <!-- Feedback -->
+      <div class="section">
+        <div class="section-header">Your Feedback</div>
+        <div class="section-body">
+          <textarea
+            class="feedback-textarea"
+            id="feedback"
+            placeholder="What do you think of this output? Any issues, suggestions, or things that look great?"
+          ></textarea>
+          <div class="feedback-status" id="feedback-status"></div>
+          <div class="prev-feedback" id="prev-feedback" style="display:none;">
+            <div class="prev-feedback-label">Previous feedback</div>
+            <div id="prev-feedback-text"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav" id="outputs-nav">
+      <button class="nav-btn" id="prev-btn" onclick="navigate(-1)">&#8592; Previous</button>
+      <button class="done-btn" id="done-btn" onclick="showDoneDialog()">Submit All Reviews</button>
+      <button class="nav-btn" id="next-btn" onclick="navigate(1)">Next &#8594;</button>
+    </div>
+    </div><!-- end panel-outputs -->
+
+    <!-- Benchmark panel (quantitative stats) -->
+    <div class="view-panel" id="panel-benchmark">
+      <div class="benchmark-view" id="benchmark-content">
+        <div class="benchmark-empty">No benchmark data available. Run a benchmark to see quantitative results here.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Done overlay -->
+  <div class="done-overlay" id="done-overlay">
+    <div class="done-card">
+      <h2>Review Complete</h2>
+      <p>Your feedback has been saved. Go back to your Claude Code session and tell Claude you're done reviewing.</p>
+      <div class="btn-row">
+        <button onclick="closeDoneDialog()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ---- Embedded data (injected by generate_review.py) ----
+    const EMBEDDED_DATA = {"skill_name": "appsheet-bds-cong-nghiep", "runs": [{"id": "eval-1-pipeline-design-with_skill", "prompt": "T\u00f4i c\u1ea7n thi\u1ebft k\u1ebf module Pipeline Sale cho h\u1ec7 th\u1ed1ng qu\u1ea3n l\u00fd giao d\u1ecbch B\u0110S c\u00f4ng nghi\u1ec7p. Sale c\u1ee7a t\u00f4i hay qu\u00ean c\u1eadp nh\u1eadt tr\u1ea1ng th\u00e1i deal, kh\u00f4ng bi\u1ebft deal n\u00e0o \u0111ang \u1edf b\u01b0\u1edbc n\u00e0o. Gi\u00fap t\u00f4i thi\u1ebft k\u1ebf module n\u00e0y trong AppSheet.", "eval_id": 1, "outputs": [{"name": "response.md", "type": "text", "content": "# Thi\u1ebft k\u1ebf Module Pipeline Sale \u2014 H\u1ec7 th\u1ed1ng Qu\u1ea3n l\u00fd Giao d\u1ecbch B\u0110S C\u00f4ng Nghi\u1ec7p\n\n---\n\n## 1. PH\u00c2N T\u00cdCH NGHI\u1ec6P V\u1ee4 \u2014 B\u00c0I TO\u00c1N \u0110ANG G\u1eb6P\n\n**Pain point ch\u00ednh:**\n- Sale kh\u00f4ng c\u1eadp nh\u1eadt tr\u1ea1ng th\u00e1i deal \u2192 manager m\u00f9 th\u00f4ng tin, kh\u00f4ng th\u1ec3 can thi\u1ec7p k\u1ecbp th\u1eddi\n- Kh\u00f4ng bi\u1ebft deal n\u00e0o \u0111ang \u1edf b\u01b0\u1edbc n\u00e0o \u2192 kh\u00f4ng \u01b0u ti\u00ean \u0111\u01b0\u1ee3c effort, b\u1ecf s\u00f3t deal n\u00f3ng\n- Thi\u1ebfu reminder \u2192 deal \"ch\u1ebft\" im l\u1eb7ng kh\u00f4ng ai hay\n\n**Nguy\u00ean nh\u00e2n g\u1ed1c r\u1ec5 (th\u01b0\u1eddng g\u1eb7p):**\n1. C\u1eadp nh\u1eadt status qu\u00e1 nhi\u1ec1u thao t\u00e1c \u2192 sale l\u01b0\u1eddi l\u00e0m\n2. App kh\u00f4ng nh\u1eafc nh\u1edf \u2192 sale qu\u00ean\n3. Kh\u00f4ng c\u00f3 \u00e1p l\u1ef1c hi\u1ec3n th\u1ecb \u2192 deal r\u1edbt kh\u00f4ng ai th\u1ea5y\n\n**Gi\u1ea3i ph\u00e1p c\u1ed1t l\u00f5i:** Thi\u1ebft k\u1ebf Pipeline c\u1ef1c k\u1ef3 \u0111\u01a1n gi\u1ea3n \u0111\u1ec3 c\u1eadp nh\u1eadt < 30 gi\u00e2y, k\u1ebft h\u1ee3p automation nh\u1eafc nh\u1edf v\u00e0 dashboard visible cho manager.\n\n---\n\n## 2. \u0110\u1ec0 XU\u1ea4T GI\u1ea2I PH\u00c1P \u2014 C\u1ea4U TR\u00daC MODULE PIPELINE SALE\n\n### 2.1 Table Structure \u2014 B\u1ea3ng PIPELINE_SALE\n\n| Column | Type | Ghi ch\u00fa |\n|---|---|---|\n| ID_Pipeline | Text (Key) | Auto-generate: PL-[YEAR]-[###] |\n| KH_Ref | Ref \u2192 KHACH_HANG | Kh\u00e1ch h\u00e0ng \u0111ang theo d\u00f5i |\n| Dat_Ref | Ref \u2192 NGUON_DAT | L\u00f4 \u0111\u1ea5t \u0111ang t\u01b0 v\u1ea5n |\n| Sale_Ref | Ref \u2192 NHAN_SU | Sale ph\u1ee5 tr\u00e1ch |\n| Stage | Enum | Quan t\u00e2m / T\u01b0 v\u1ea5n / Xem th\u1ef1c \u0111\u1ecba / \u0110\u00e0m ph\u00e1n / Ch\u1edd quy\u1ebft \u0111\u1ecbnh / Ch\u1ed1t / R\u1edbt |\n| XacSuat_Chot | Enum | 10% / 25% / 50% / 75% / 90% |\n| GiaDeXuat_Ty | Decimal | Gi\u00e1 \u0111\u1ec1 xu\u1ea5t cho kh\u00e1ch (t\u1ef7 \u0111\u1ed3ng) |\n| Ngay_TiepCan | Date | Ng\u00e0y \u0111\u1ea7u ti\u00ean li\u00ean h\u1ec7 |\n| Ngay_CapNhat | DateTime | Auto = NOW() khi c\u00f3 thay \u0111\u1ed5i |\n| Ngay_HenTiepTheo | Date | Sale t\u1ef1 set \u2014 trigger reminder |\n| LyDo_Rot | Text | B\u1eaft bu\u1ed9c \u0111i\u1ec1n khi Stage = \"R\u1edbt\" |\n| Ghi_Chu | LongText | Ghi ch\u00fa n\u1ed9i dung t\u01b0 v\u1ea5n, \u0111\u00e0m ph\u00e1n |\n| Days_In_Stage | Number | =TODAY() - [Ngay_CapNhat] (t\u00ednh ng\u00e0y \u00ec) |\n\n**C\u00f4ng th\u1ee9c Auto-ID:**\n```\n\"PL-\" & YEAR(TODAY()) & \"-\" & TEXT(ROW(), \"000\")\n```\n\n**C\u00f4ng th\u1ee9c Days_In_Stage (ph\u00e1t hi\u1ec7n deal \u00ec):**\n```\nIF(OR([Stage]=\"Ch\u1ed1t\", [Stage]=\"R\u1edbt\"), 0, DATEDIF([Ngay_CapNhat], TODAY(), \"D\"))\n```\n\n---\n\n### 2.2 Relationships (Ref)\n\n```\nKHACH_HANG (1) \u2500\u2500\u2192 PIPELINE_SALE (nhi\u1ec1u)\nNGUON_DAT  (1) \u2500\u2500\u2192 PIPELINE_SALE (nhi\u1ec1u)\nNHAN_SU    (1) \u2500\u2500\u2192 PIPELINE_SALE (nhi\u1ec1u)\nPIPELINE_SALE (1) \u2500\u2500\u2192 GIAO_DICH (1) [khi Stage = \"Ch\u1ed1t\"]\n```\n\n- M\u1ed9t kh\u00e1ch h\u00e0ng c\u00f3 th\u1ec3 c\u00f3 nhi\u1ec1u pipeline (xem nhi\u1ec1u l\u00f4 \u0111\u1ea5t kh\u00e1c nhau)\n- M\u1ed9t l\u00f4 \u0111\u1ea5t c\u00f3 th\u1ec3 c\u00f3 nhi\u1ec1u pipeline (nhi\u1ec1u kh\u00e1ch quan t\u00e2m c\u00f9ng l\u00fac)\n- Khi Stage chuy\u1ec3n \"Ch\u1ed1t\" \u2192 t\u1ef1 \u0111\u1ed9ng t\u1ea1o row trong GIAO_DICH\n\n---\n\n### 2.3 Enum Status Chu\u1ea9n \u2014 Pipeline Stage\n\n| Stage | \u00dd ngh\u0129a | X\u00e1c su\u1ea5t ch\u1ed1t m\u1eb7c \u0111\u1ecbnh |\n|---|---|---|\n| Quan t\u00e2m | Kh\u00e1ch h\u1ecfi th\u00f4ng tin, ch\u01b0a xem th\u1ef1c \u0111\u1ecba | 10% |\n| T\u01b0 v\u1ea5n | \u0110ang t\u01b0 v\u1ea5n chi ti\u1ebft, g\u1eedi h\u1ed3 s\u01a1 | 25% |\n| Xem th\u1ef1c \u0111\u1ecba | \u0110\u00e3 h\u1eb9n/\u0111\u00e3 \u0111i xem \u0111\u1ea5t | 50% |\n| \u0110\u00e0m ph\u00e1n | \u0110ang th\u01b0\u01a1ng l\u01b0\u1ee3ng gi\u00e1, \u0111i\u1ec1u kho\u1ea3n | 75% |\n| Ch\u1edd quy\u1ebft \u0111\u1ecbnh | Kh\u00e1ch n\u1ed9i b\u1ed9 h\u1ecdp/b\u00e1o c\u00e1o l\u00e3nh \u0111\u1ea1o | 75% |\n| Ch\u1ed1t | Deal th\u00e0nh c\u00f4ng \u2192 chuy\u1ec3n sang Giao D\u1ecbch | 100% |\n| R\u1edbt | Deal th\u1ea5t b\u1ea1i \u2014 b\u1eaft bu\u1ed9c \u0111i\u1ec1n LyDo_Rot | 0% |\n\n---\n\n### 2.4 Automation & Workflow\n\n#### Automation 1: Nh\u1eafc sale c\u1eadp nh\u1eadt deal b\u1ecb \u00ec\n```\nTrigger:   Scheduled \u2014 m\u1ed7i ng\u00e0y 8:30 s\u00e1ng\nCondition: [Days_In_Stage] >= 3\n           AND NOT(OR([Stage]=\"Ch\u1ed1t\", [Stage]=\"R\u1edbt\"))\nAction:    Send notification \u2192 [Sale_Ref].[Email]\nBody:      \"\u26a0\ufe0f Deal [ID_Pipeline] - [KH_Ref].[Ten_KH] \u0111\u00e3 \" \n           & [Days_In_Stage] & \" ng\u00e0y ch\u01b0a c\u1eadp nh\u1eadt. Ki\u1ec3m tra ngay!\"\n```\n\n#### Automation 2: Nh\u1eafc l\u1ecbch h\u1eb9n ti\u1ebfp theo\n```\nTrigger:   Scheduled \u2014 m\u1ed7i ng\u00e0y 7:00 s\u00e1ng\nCondition: [Ngay_HenTiepTheo] = TODAY()\n           AND NOT(OR([Stage]=\"Ch\u1ed1t\", [Stage]=\"R\u1edbt\"))\nAction:    Send notification \u2192 [Sale_Ref].[Email]\nBody:      \"\ud83d\udcc5 H\u00f4m nay c\u00f3 h\u1eb9n v\u1edbi [KH_Ref].[Ten_KH] \n           (Deal: [ID_Pipeline]). Chu\u1ea9n b\u1ecb t\u1ed1t!\"\n```\n\n#### Automation 3: T\u1ef1 \u0111\u1ed9ng t\u1ea1o Giao D\u1ecbch khi Ch\u1ed1t\n```\nTrigger:   On change \u2014 khi [Stage] thay \u0111\u1ed5i\nCondition: [Stage] = \"Ch\u1ed1t\"\nAction 1:  Add row \u2192 GIAO_DICH\n           - Pipeline_Ref = [ID_Pipeline]\n           - GiaTriHopDong_Ty = [GiaDeXuat_Ty]\n           - TrangThai_HopDong = \"So\u1ea1n th\u1ea3o\"\nAction 2:  Send notification \u2192 Manager + K\u1ebf to\u00e1n\n           Body: \"\ud83c\udf89 Deal m\u1edbi ch\u1ed1t: [ID_Pipeline] \n                 Kh\u00e1ch: [KH_Ref].[Ten_KH]\n                 Gi\u00e1: [GiaDeXuat_Ty] t\u1ef7\n                 Sale: [Sale_Ref].[Ho_Ten]\"\n```\n\n#### Automation 4: C\u1ea3nh b\u00e1o manager khi deal \u00ec > 7 ng\u00e0y\n```\nTrigger:   Scheduled \u2014 m\u1ed7i th\u1ee9 Hai 9:00 s\u00e1ng\nCondition: [Days_In_Stage] >= 7\n           AND NOT(OR([Stage]=\"Ch\u1ed1t\", [Stage]=\"R\u1edbt\"))\nAction:    Send email \u2192 Manager\nSubject:   \"B\u00e1o c\u00e1o deal \u00ec \u2014 tu\u1ea7n n\u00e0y\"\nBody:      Danh s\u00e1ch t\u1ea5t c\u1ea3 deal \u00ec >= 7 ng\u00e0y\n```\n\n#### Automation 5: Log l\u1ecbch s\u1eed khi thay \u0111\u1ed5i Stage\n```\nTrigger:   On change \u2014 khi [Stage] thay \u0111\u1ed5i\nAction:    Add row \u2192 PIPELINE_HISTORY (b\u1ea3ng log)\n           - Pipeline_Ref = [ID_Pipeline]\n           - Stage_Cu = [Stage] (gi\u00e1 tr\u1ecb tr\u01b0\u1edbc)\n           - Stage_Moi = [Stage] (gi\u00e1 tr\u1ecb m\u1edbi)\n           - Thoi_Gian = NOW()\n           - Nguoi_Cap_Nhat = USEREMAIL()\n```\n\n> **T\u1ea1i sao c\u1ea7n b\u1ea3ng PIPELINE_HISTORY?** \u0110\u1ec3 manager xem \u0111\u01b0\u1ee3c l\u1ecbch s\u1eed thay \u0111\u1ed5i, ph\u00e1t hi\u1ec7n sale ch\u1ec9nh ng\u01b0\u1ee3c stage \u0111\u1ec3 qua m\u1eb7t KPI.\n\n---\n\n### 2.5 Security Filter\n\n```\n// Sale ch\u1ec9 th\u1ea5y deal c\u1ee7a m\u00ecnh\nPIPELINE_SALE: USEREMAIL() = [Sale_Ref].[Email]\n\n// Manager th\u1ea5y to\u00e0n b\u1ed9 team\nPIPELINE_SALE: IN(USEREMAIL(), \n  SELECT(NHAN_SU[Email], [Role] = \"Manager\"))\n\n// Gi\u00e1m \u0111\u1ed1c th\u1ea5y t\u1ea5t c\u1ea3 \u2014 kh\u00f4ng c\u1ea7n filter\nPIPELINE_SALE: TRUE\n\n// K\u1ebf to\u00e1n kh\u00f4ng th\u1ea5y pipeline (ch\u1ec9 th\u1ea5y Giao D\u1ecbch \u0111\u00e3 Ch\u1ed1t)\nPIPELINE_SALE: FALSE\n```\n\n---\n\n### 2.6 UX Views \u2014 Thi\u1ebft k\u1ebf M\u00e0n H\u00ecnh Mobile\n\n#### View 1: Pipeline Board (Deck View)\nM\u1ee5c \u0111\u00edch: Sale m\u1edf ra th\u1ea5y ngay to\u00e0n b\u1ed9 deal c\u1ee7a m\u00ecnh theo stage\n```\nView Type: Deck\nSort:      [Ngay_CapNhat] ASC (deal c\u0169 nh\u1ea5t l\u00ean tr\u00ean \u2014 nh\u1eafc c\u1eadp nh\u1eadt)\nFilter:    Security filter \u0111\u00e3 set\nCard hi\u1ec3n th\u1ecb:\n  - Ti\u00eau \u0111\u1ec1: [KH_Ref].[Ten_KH]\n  - Ph\u1ee5 \u0111\u1ec1: [Stage] | [Days_In_Stage] ng\u00e0y\n  - Badge \u0111\u1ecf n\u1ebfu Days_In_Stage >= 3\n```\n\n#### View 2: Pipeline Quick Update (Form inline)\nM\u1ee5c \u0111\u00edch: C\u1eadp nh\u1eadt stage trong < 30 gi\u00e2y\n```\nCh\u1ec9 hi\u1ec3n th\u1ecb 3 field tr\u00ean m\u00e0n h\u00ecnh:\n  1. Stage          \u2192 Enum dropdown (l\u1edbn, d\u1ec5 tap)\n  2. Ghi_Chu        \u2192 LongText (optional)\n  3. Ngay_HenTiepTheo \u2192 Date picker\n  \n\u1ea8n c\u00e1c field k\u1ef9 thu\u1eadt: ID, Ngay_TiepCan, Sale_Ref...\n```\n\n**C\u00e1ch t\u1ea1o trong AppSheet:**\n- V\u00e0o View \u2192 New Form View \u2192 ch\u1ecdn b\u1ea3ng PIPELINE_SALE\n- Trong Column Order: k\u00e9o Stage, Ghi_Chu, Ngay_HenTiepTheo l\u00ean \u0111\u1ea7u\n- Show/hide: \u1ea9n t\u1ea5t c\u1ea3 column kh\u00f4ng c\u1ea7n thi\u1ebft khi edit\n\n#### View 3: Pipeline Funnel (Chart View)\nM\u1ee5c \u0111\u00edch: Manager th\u1ea5y funnel t\u1ed5ng quan\n```\nView Type: Chart \u2014 Bar Chart\nX-axis:    [Stage]\nY-axis:    COUNT([ID_Pipeline])\nFilter:    Lo\u1ea1i b\u1ecf Stage \"R\u1edbt\" v\u00e0 \"Ch\u1ed1t\" (\u0111\u00e3 xong)\nGroup by:  [Sale_Ref] (xem \u0111\u01b0\u1ee3c theo t\u1eebng sale)\n```\n\n#### View 4: Deal Detail (Detail View)\n```\nSection 1 \u2014 Th\u00f4ng tin ch\u00ednh:\n  KH_Ref, Dat_Ref, Stage, XacSuat_Chot, GiaDeXuat_Ty\n\nSection 2 \u2014 Timeline:\n  Ngay_TiepCan, Ngay_CapNhat, Ngay_HenTiepTheo, Days_In_Stage\n\nSection 3 \u2014 Related:\n  Inline list: PIPELINE_HISTORY (l\u1ecbch s\u1eed thay \u0111\u1ed5i stage)\n  \nSection 4 \u2014 Ghi ch\u00fa:\n  Ghi_Chu, LyDo_Rot (hi\u1ec7n khi Stage = \"R\u1edbt\")\n```\n\n---\n\n### 2.7 Dashboard C\u1ea7n Thi\u1ebft\n\n#### Dashboard Sale (m\u1ed7i sale t\u1ef1 xem KPI c\u1ee7a m\u00ecnh)\n```\nCard 1: T\u1ed5ng deal \u0111ang active = \n  COUNTIF(PIPELINE_SALE[Stage], \n    NOT(OR([Stage]=\"Ch\u1ed1t\", [Stage]=\"R\u1edbt\")))\n\nCard 2: Deal s\u1eafp ch\u1ed1t (Stage = \"\u0110\u00e0m ph\u00e1n\" ho\u1eb7c \"Ch\u1edd quy\u1ebft \u0111\u1ecbnh\") =\n  COUNTIF(PIPELINE_SALE[Stage], \n    OR([Stage]=\"\u0110\u00e0m ph\u00e1n\", [Stage]=\"Ch\u1edd quy\u1ebft \u0111\u1ecbnh\"))\n\nCard 3: Gi\u00e1 tr\u1ecb pipeline \u0111ang theo (t\u1ef7 \u0111\u1ed3ng) =\n  SUMIF(PIPELINE_SALE[GiaDeXuat_Ty], \n    NOT(OR([Stage]=\"Ch\u1ed1t\", [Stage]=\"R\u1edbt\")))\n\nCard 4: Deal ch\u1ed1t th\u00e1ng n\u00e0y =\n  COUNTIFS(PIPELINE_SALE[Stage], [Stage]=\"Ch\u1ed1t\",\n           PIPELINE_SALE[Ngay_CapNhat], MONTH([Ngay_CapNhat])=MONTH(TODAY()))\n```\n\n#### Dashboard Manager (xem to\u00e0n team)\n```\nFunnel chart: s\u1ed1 deal theo t\u1eebng stage\nBar chart:    doanh thu theo t\u1eebng sale (th\u00e1ng n\u00e0y)\nTable:        top 5 deal \u00ec nh\u1ea5t (Days_In_Stage cao nh\u1ea5t)\nKPI card:     t\u1ef7 l\u1ec7 chuy\u1ec3n \u0111\u1ed5i = Ch\u1ed1t / (Ch\u1ed1t + R\u1edbt)\n```\n\n---\n\n## 3. H\u01af\u1edaNG D\u1eaaN TRI\u1ec2N KHAI \u2014 STEP BY STEP\n\n### Tu\u1ea7n 1: X\u00e2y d\u1ef1ng n\u1ec1n t\u1ea3ng\n1. T\u1ea1o b\u1ea3ng PIPELINE_SALE trong Google Sheets\n2. Import v\u00e0o AppSheet, \u0111\u1eb7t Key = ID_Pipeline\n3. C\u1ea5u h\u00ecnh t\u1ea5t c\u1ea3 Enum cho c\u1ed9t Stage\n4. Thi\u1ebft l\u1eadp Ref \u0111\u1ebfn KHACH_HANG, NGUON_DAT, NHAN_SU\n5. Th\u00eam c\u1ed9t Days_In_Stage v\u1edbi formula t\u1ef1 t\u00ednh\n\n### Tu\u1ea7n 2: Automation & Security\n1. Thi\u1ebft l\u1eadp 5 automation \u0111\u00e3 m\u00f4 t\u1ea3 \u1edf tr\u00ean\n2. C\u1ea5u h\u00ecnh Security Filter theo role\n3. T\u1ea1o b\u1ea3ng PIPELINE_HISTORY \u0111\u1ec3 log thay \u0111\u1ed5i\n4. Test th\u1eed to\u00e0n b\u1ed9 flow: t\u1ea1o deal \u2192 c\u1eadp nh\u1eadt stage \u2192 nh\u1eadn notification\n\n### Tu\u1ea7n 3: UX & Dashboard\n1. Thi\u1ebft k\u1ebf View mobile cho sale (Pipeline Board + Quick Update Form)\n2. Thi\u1ebft k\u1ebf Dashboard cho manager\n3. Training sale: ch\u1ec9 c\u1ea7n 30 ph\u00fat, focus v\u00e0o 2 thao t\u00e1c ch\u00ednh\n4. Ch\u1ea1y th\u1eed 1 tu\u1ea7n, thu th\u1eadp feedback\n\n### Tu\u1ea7n 4: Tinh ch\u1ec9nh\n1. \u0110i\u1ec1u ch\u1ec9nh threshold Days_In_Stage d\u1ef1a tr\u00ean th\u1ef1c t\u1ebf (3 ng\u00e0y hay 5 ng\u00e0y?)\n2. Th\u00eam b\u1ea5t k\u1ef3 automation n\u00e0o ph\u00e1t sinh t\u1eeb feedback\n3. B\u00e0n giao ch\u00ednh th\u1ee9c\n\n---\n\n## 4. L\u01afU \u00dd & R\u1ee6I RO KHI TRI\u1ec2N KHAI\n\n### R\u1ee7i ro 1: Sale v\u1eabn kh\u00f4ng ch\u1ecbu c\u1eadp nh\u1eadt\n**Gi\u1ea3i ph\u00e1p:** L\u00e0m m\u00e0n h\u00ecnh Quick Update c\u1ef1c \u0111\u01a1n gi\u1ea3n (3 tap l\u00e0 xong). \u0110\u1ed3ng th\u1eddi manager c\u1ea7n t\u1ea1o v\u0103n h\u00f3a: h\u1ecdp s\u00e1ng th\u1ee9 Hai review pipeline \u2014 deal n\u00e0o kh\u00f4ng c\u1eadp nh\u1eadt = sale ph\u1ea3i gi\u1ea3i tr\u00ecnh.\n\n### R\u1ee7i ro 2: Days_In_Stage t\u00ednh sai n\u1ebfu sale kh\u00f4ng c\u1eadp nh\u1eadt \u0111\u00fang th\u1eddi \u0111i\u1ec3m\n**Gi\u1ea3i ph\u00e1p:** D\u00f9ng b\u1ea3ng PIPELINE_HISTORY l\u00e0m ngu\u1ed3n tin c\u1eady h\u01a1n. T\u00ednh Days_In_Stage t\u1eeb timestamp cu\u1ed1i c\u00f9ng trong PIPELINE_HISTORY.\n\n### R\u1ee7i ro 3: Nhi\u1ec1u pipeline cho c\u00f9ng 1 l\u00f4 \u0111\u1ea5t g\u00e2y nh\u1ea7m l\u1eabn\n**Gi\u1ea3i ph\u00e1p:** Trong View c\u1ee7a NGUON_DAT, hi\u1ec3n th\u1ecb inline list t\u1ea5t c\u1ea3 pipeline \u0111ang active. Sale th\u1ea5y ngay l\u00f4 \u0111\u1ea5t m\u00ecnh \u0111ang t\u01b0 v\u1ea5n \u0111\u00e3 c\u00f3 ng\u01b0\u1eddi kh\u00e1c theo hay ch\u01b0a.\n\n### R\u1ee7i ro 4: AppSheet notification kh\u00f4ng \u0111\u1ebfn do thi\u1ebft b\u1ecb\n**Gi\u1ea3i ph\u00e1p:** Ngo\u00e0i push notification, c\u1ea5u h\u00ecnh th\u00eam email backup. Training sale b\u1eadt notification cho app AppSheet.\n\n### \u0110i\u1ec3m c\u1ea7n quy\u1ebft \u0111\u1ecbnh tr\u01b0\u1edbc khi build:\n- [ ] Days_In_Stage bao nhi\u00eau ng\u00e0y th\u00ec g\u1eedi c\u1ea3nh b\u00e1o l\u1ea7n 1? (\u0111\u1ec1 xu\u1ea5t: 3 ng\u00e0y)\n- [ ] Ai c\u00f3 quy\u1ec1n xem pipeline c\u1ee7a sale kh\u00e1c? (ch\u1ec9 manager tr\u1ef1c ti\u1ebfp hay t\u1ea5t c\u1ea3 manager?)\n- [ ] C\u00f3 c\u1ea7n track l\u00fd do r\u1edbt theo danh m\u1ee5c kh\u00f4ng? (Gi\u00e1 cao / \u0110\u1ed1i th\u1ee7 / Ph\u00e1p l\u00fd / T\u00e0i ch\u00ednh kh\u00e1ch)\n- [ ] Pipeline history l\u01b0u bao l\u00e2u? (\u0111\u1ec1 xu\u1ea5t: gi\u1eef nguy\u00ean kh\u00f4ng x\u00f3a)\n\n---\n\n## T\u00d3M T\u1eaeT NHANH\n\n| V\u1ea5n \u0111\u1ec1 | Gi\u1ea3i ph\u00e1p |\n|---|---|\n| Sale qu\u00ean c\u1eadp nh\u1eadt | Auto reminder sau 3 ng\u00e0y kh\u00f4ng c\u1eadp nh\u1eadt |\n| Kh\u00f4ng bi\u1ebft deal \u1edf \u0111\u00e2u | Deck View s\u1eafp x\u1ebfp theo ng\u00e0y c\u1eadp nh\u1eadt \u2014 c\u0169 nh\u1ea5t l\u00ean \u0111\u1ea7u |\n| C\u1eadp nh\u1eadt m\u1ea5t th\u1eddi gian | Quick Update Form ch\u1ec9 3 field, < 30 gi\u00e2y |\n| Manager kh\u00f4ng theo d\u00f5i \u0111\u01b0\u1ee3c | Funnel Chart + c\u1ea3nh b\u00e1o deal \u00ec > 7 ng\u00e0y |\n| Deal ch\u1ed1t kh\u00f4ng chuy\u1ec3n k\u1ebf to\u00e1n | Auto t\u1ea1o Giao D\u1ecbch + notify k\u1ebf to\u00e1n ngay l\u1eadp t\u1ee9c |\n\n"}], "grading": {"eval_id": 1, "config": "with_skill", "assertions": [{"text": "stage/status enum", "passed": true, "evidence": "Found 'quan t\u00e2m'"}, {"text": "table structure with columns", "passed": true, "evidence": "Found 'pipeline_sale'"}, {"text": "automation reminder", "passed": true, "evidence": "Found 'automation'"}, {"text": "security filter", "passed": true, "evidence": "Found 'security'"}, {"text": "mobile UX", "passed": true, "evidence": "Found 'mobile'"}]}}, {"id": "eval-1-pipeline-design-without_skill", "prompt": "T\u00f4i c\u1ea7n thi\u1ebft k\u1ebf module Pipeline Sale cho h\u1ec7 th\u1ed1ng qu\u1ea3n l\u00fd giao d\u1ecbch B\u0110S c\u00f4ng nghi\u1ec7p. Sale c\u1ee7a t\u00f4i hay qu\u00ean c\u1eadp nh\u1eadt tr\u1ea1ng th\u00e1i deal, kh\u00f4ng bi\u1ebft deal n\u00e0o \u0111ang \u1edf b\u01b0\u1edbc n\u00e0o. Gi\u00fap t\u00f4i thi\u1ebft k\u1ebf module n\u00e0y trong AppSheet.", "eval_id": 1, "outputs": [{"name": "response.md", "type": "text", "content": "# Thi\u1ebft K\u1ebf Module Pipeline Sale cho H\u1ec7 Th\u1ed1ng Qu\u1ea3n L\u00fd Giao D\u1ecbch B\u0110S C\u00f4ng Nghi\u1ec7p tr\u00ean AppSheet\n\n## 1. T\u1ed5ng Quan Gi\u1ea3i Ph\u00e1p\n\nModule Pipeline Sale gi\u00fap \u0111\u1ed9i ng\u0169 sale theo d\u00f5i to\u00e0n b\u1ed9 h\u00e0nh tr\u00ecnh c\u1ee7a t\u1eebng deal B\u0110S c\u00f4ng nghi\u1ec7p t\u1eeb khi ti\u1ebfp c\u1eadn kh\u00e1ch h\u00e0ng \u0111\u1ebfn khi k\u00fd h\u1ee3p \u0111\u1ed3ng. AppSheet l\u00e0 n\u1ec1n t\u1ea3ng no-code ph\u00f9 h\u1ee3p v\u00ec c\u00f3 th\u1ec3 k\u1ebft n\u1ed1i tr\u1ef1c ti\u1ebfp v\u1edbi Google Sheets, t\u00edch h\u1ee3p th\u00f4ng b\u00e1o t\u1ef1 \u0111\u1ed9ng, v\u00e0 x\u00e2y d\u1ef1ng giao di\u1ec7n tr\u1ef1c quan.\n\n---\n\n## 2. C\u00e1c B\u01b0\u1edbc (Stage) trong Pipeline B\u0110S C\u00f4ng Nghi\u1ec7p\n\n\u0110\u1ec1 xu\u1ea5t 7 giai \u0111o\u1ea1n ph\u00f9 h\u1ee3p v\u1edbi quy tr\u00ecnh b\u00e1n B\u0110S c\u00f4ng nghi\u1ec7p (khu c\u00f4ng nghi\u1ec7p, nh\u00e0 x\u01b0\u1edfng, \u0111\u1ea5t c\u00f4ng nghi\u1ec7p):\n\n| STT | Stage | M\u00f4 t\u1ea3 |\n|-----|-------|-------|\n| 1 | Lead M\u1edbi | Kh\u00e1ch h\u00e0ng v\u1eeba li\u00ean h\u1ec7 ho\u1eb7c \u0111\u01b0\u1ee3c t\u1ea1o t\u1eeb ngu\u1ed3n marketing |\n| 2 | \u0110\u00e3 Li\u00ean H\u1ec7 | Sale \u0111\u00e3 g\u1ecdi/g\u1eb7p, x\u00e1c nh\u1eadn nhu c\u1ea7u ban \u0111\u1ea7u |\n| 3 | Kh\u1ea3o S\u00e1t Nhu C\u1ea7u | \u0110\u00e3 thu th\u1eadp th\u00f4ng tin chi ti\u1ebft: di\u1ec7n t\u00edch, v\u1ecb tr\u00ed, ng\u00e2n s\u00e1ch |\n| 4 | Tham Quan Th\u1ef1c T\u1ebf | \u0110\u00e3 \u0111\u01b0a kh\u00e1ch \u0111\u1ebfn xem m\u1eb7t b\u1eb1ng/khu c\u00f4ng nghi\u1ec7p |\n| 5 | \u0110ang \u0110\u00e0m Ph\u00e1n | \u0110ang th\u01b0\u01a1ng l\u01b0\u1ee3ng gi\u00e1, \u0111i\u1ec1u kho\u1ea3n h\u1ee3p \u0111\u1ed3ng |\n| 6 | Ch\u1edd K\u00fd H\u1ee3p \u0110\u1ed3ng | Hai b\u00ean \u0111\u00e3 th\u1ed1ng nh\u1ea5t, chu\u1ea9n b\u1ecb k\u00fd |\n| 7 | \u0110\u00e3 \u0110\u00f3ng | H\u1ee3p \u0111\u1ed3ng \u0111\u00e3 k\u00fd ho\u1eb7c deal th\u1ea5t b\u1ea1i (Won/Lost) |\n\n---\n\n## 3. Thi\u1ebft K\u1ebf C\u01a1 S\u1edf D\u1eef Li\u1ec7u (Google Sheets)\n\n### B\u1ea3ng 1: DEALS (Sheet ch\u00ednh)\n\n| T\u00ean C\u1ed9t | Ki\u1ec3u D\u1eef Li\u1ec7u | M\u00f4 T\u1ea3 |\n|---------|--------------|-------|\n| Deal_ID | Text (Key) | M\u00e3 deal t\u1ef1 \u0111\u1ed9ng: DEAL-001 |\n| Ten_Deal | Text | T\u00ean deal / t\u00ean d\u1ef1 \u00e1n |\n| Khach_Hang_ID | Ref \u2192 CUSTOMERS | Li\u00ean k\u1ebft kh\u00e1ch h\u00e0ng |\n| Sale_PIC | Ref \u2192 USERS | Sale ph\u1ee5 tr\u00e1ch |\n| Stage | Enum | 7 giai \u0111o\u1ea1n \u1edf tr\u00ean |\n| Gia_Tri_Du_Kien | Price | Gi\u00e1 tr\u1ecb \u01b0\u1edbc t\u00ednh (VN\u0110) |\n| Xac_Suat_Chot | Percent | % kh\u1ea3 n\u0103ng th\u00e0nh c\u00f4ng |\n| Ngay_Tao | Date | Ng\u00e0y t\u1ea1o deal |\n| Ngay_Cap_Nhat_Stage | DateTime | L\u1ea7n cu\u1ed1i \u0111\u1ed5i stage |\n| Ngay_Du_Kien_Dong | Date | D\u1ef1 ki\u1ebfn \u0111\u00f3ng deal |\n| Ghi_Chu | LongText | Ghi ch\u00fa t\u1ed5ng quan |\n| Ket_Qua | Enum | Won / Lost / In Progress |\n| Ly_Do_That_Bai | Text | N\u1ebfu Lost, l\u00fd do l\u00e0 g\u00ec |\n| Nguon_Lead | Enum | Website / Referral / Call / Event |\n| Loai_San_Pham | Enum | \u0110\u1ea5t KCN / Nh\u00e0 x\u01b0\u1edfng / V\u0103n ph\u00f2ng / Kho |\n| Dien_Tich_YC | Number | Di\u1ec7n t\u00edch kh\u00e1ch y\u00eau c\u1ea7u (m\u00b2) |\n| Vi_Tri_YC | Text | T\u1ec9nh/KCN kh\u00e1ch mu\u1ed1n |\n\n### B\u1ea3ng 2: DEAL_ACTIVITIES (L\u1ecbch s\u1eed ho\u1ea1t \u0111\u1ed9ng)\n\n| T\u00ean C\u1ed9t | Ki\u1ec3u D\u1eef Li\u1ec7u | M\u00f4 T\u1ea3 |\n|---------|--------------|-------|\n| Activity_ID | Text (Key) | M\u00e3 t\u1ef1 \u0111\u1ed9ng |\n| Deal_ID | Ref \u2192 DEALS | Li\u00ean k\u1ebft deal |\n| Loai_Hoat_Dong | Enum | G\u1ecdi \u0111i\u1ec7n / Email / G\u1eb7p m\u1eb7t / Tham quan / G\u1eedi h\u1ed3 s\u01a1 |\n| Mo_Ta | LongText | N\u1ed9i dung ho\u1ea1t \u0111\u1ed9ng |\n| Ngay_Thuc_Hien | DateTime | Th\u1eddi \u0111i\u1ec3m th\u1ef1c hi\u1ec7n |\n| Nguoi_Thuc_Hien | Ref \u2192 USERS | Ai th\u1ef1c hi\u1ec7n |\n| Stage_Truoc | Text | Stage tr\u01b0\u1edbc khi \u0111\u1ed5i |\n| Stage_Sau | Text | Stage sau khi \u0111\u1ed5i |\n| File_Dinh_Kem | File | H\u1ee3p \u0111\u1ed3ng, h\u1ed3 s\u01a1, h\u00ecnh \u1ea3nh |\n\n### B\u1ea3ng 3: CUSTOMERS (Kh\u00e1ch h\u00e0ng)\n\n| T\u00ean C\u1ed9t | Ki\u1ec3u D\u1eef Li\u1ec7u | M\u00f4 T\u1ea3 |\n|---------|--------------|-------|\n| Customer_ID | Text (Key) | M\u00e3 kh\u00e1ch h\u00e0ng |\n| Ten_Cong_Ty | Text | T\u00ean doanh nghi\u1ec7p |\n| Nguoi_Lien_He | Text | Ng\u01b0\u1eddi \u0111\u1ea1i di\u1ec7n |\n| So_Dien_Thoai | Phone | S\u0110T |\n| Email | Email | Email |\n| Nganh_Nghe | Text | Ng\u00e0nh s\u1ea3n xu\u1ea5t/kinh doanh |\n| Quoc_Tich | Enum | Vi\u1ec7t Nam / H\u00e0n Qu\u1ed1c / Nh\u1eadt B\u1ea3n / \u0110\u00e0i Loan / Kh\u00e1c |\n\n### B\u1ea3ng 4: TASKS (C\u00f4ng vi\u1ec7c nh\u1eafc nh\u1edf)\n\n| T\u00ean C\u1ed9t | Ki\u1ec3u D\u1eef Li\u1ec7u | M\u00f4 T\u1ea3 |\n|---------|--------------|-------|\n| Task_ID | Text (Key) | M\u00e3 task |\n| Deal_ID | Ref \u2192 DEALS | Li\u00ean k\u1ebft deal |\n| Tieu_De | Text | Ti\u00eau \u0111\u1ec1 c\u00f4ng vi\u1ec7c |\n| Mo_Ta | LongText | Chi ti\u1ebft |\n| Deadline | DateTime | H\u1ea1n ho\u00e0n th\u00e0nh |\n| Assigned_To | Ref \u2192 USERS | Giao cho ai |\n| Trang_Thai | Enum | Ch\u01b0a l\u00e0m / \u0110ang l\u00e0m / Ho\u00e0n th\u00e0nh |\n| Uu_Tien | Enum | Cao / Trung b\u00ecnh / Th\u1ea5p |\n\n---\n\n## 4. C\u1ea5u H\u00ecnh AppSheet\n\n### 4.1 T\u1ea1o App v\u00e0 K\u1ebft N\u1ed1i Data\n\n1. V\u00e0o appsheet.com \u2192 New App \u2192 Start with existing data\n2. K\u1ebft n\u1ed1i Google Sheets ch\u1ee9a 4 b\u1ea3ng tr\u00ean\n3. AppSheet s\u1ebd t\u1ef1 nh\u1eadn di\u1ec7n c\u00e1c c\u1ed9t v\u00e0 ki\u1ec3u d\u1eef li\u1ec7u\n\n### 4.2 C\u1ea5u H\u00ecnh Ki\u1ec3u D\u1eef Li\u1ec7u Quan Tr\u1ecdng\n\n**C\u1ed9t Stage (DEALS):**\n- Type: Enum\n- Values: Lead M\u1edbi, \u0110\u00e3 Li\u00ean H\u1ec7, Kh\u1ea3o S\u00e1t Nhu C\u1ea7u, Tham Quan Th\u1ef1c T\u1ebf, \u0110ang \u0110\u00e0m Ph\u00e1n, Ch\u1edd K\u00fd H\u1ee3p \u0110\u1ed3ng, \u0110\u00e3 \u0110\u00f3ng\n- Input mode: Buttons (\u0111\u1ec3 d\u1ec5 ch\u1ecdn tr\u00ean mobile)\n\n**C\u1ed9t Ngay_Cap_Nhat_Stage:**\n- Type: DateTime\n- App formula: `NOW()` \u2014 t\u1ef1 \u0111\u1ed9ng c\u1eadp nh\u1eadt khi m\u1edf form, ho\u1eb7c d\u00f9ng Automation\n\n**C\u1ed9t Xac_Suat_Chot:**\n- C\u00f3 th\u1ec3 d\u00f9ng formula t\u1ef1 \u0111\u1ed9ng theo Stage:\n```\nIFS(\n  [Stage] = \"Lead M\u1edbi\", 0.1,\n  [Stage] = \"\u0110\u00e3 Li\u00ean H\u1ec7\", 0.2,\n  [Stage] = \"Kh\u1ea3o S\u00e1t Nhu C\u1ea7u\", 0.35,\n  [Stage] = \"Tham Quan Th\u1ef1c T\u1ebf\", 0.5,\n  [Stage] = \"\u0110ang \u0110\u00e0m Ph\u00e1n\", 0.7,\n  [Stage] = \"Ch\u1edd K\u00fd H\u1ee3p \u0110\u1ed3ng\", 0.9,\n  [Stage] = \"\u0110\u00e3 \u0110\u00f3ng\", 1,\n  TRUE, 0\n)\n```\n\n### 4.3 Thi\u1ebft K\u1ebf Views (Giao Di\u1ec7n)\n\n#### View 1: Kanban Pipeline (Quan tr\u1ecdng nh\u1ea5t)\n- View name: Pipeline Board\n- View type: **Deck** ho\u1eb7c **Gallery** nh\u00f3m theo Stage\n- Group by: Stage\n- Sort by: Ngay_Cap_Nhat_Stage (m\u1edbi nh\u1ea5t l\u00ean \u0111\u1ea7u)\n- Card hi\u1ec3n th\u1ecb: T\u00ean deal, Kh\u00e1ch h\u00e0ng, Gi\u00e1 tr\u1ecb, Ng\u00e0y d\u1ef1 ki\u1ebfn \u0111\u00f3ng\n\n> L\u01b0u \u00fd: AppSheet kh\u00f4ng c\u00f3 Kanban k\u00e9o-th\u1ea3 nh\u01b0 Trello, nh\u01b0ng c\u00f3 th\u1ec3 nh\u00f3m theo Stage b\u1eb1ng Deck view. \u0110\u1ec3 c\u00f3 Kanban th\u1ef1c s\u1ef1, c\u00f3 th\u1ec3 nh\u00fang AppSheet v\u00e0o Google Sites k\u1ebft h\u1ee3p v\u1edbi script.\n\n#### View 2: Danh S\u00e1ch Deals\n- View type: Table\n- Filter: Show only deals c\u1ee7a user \u0111ang \u0111\u0103ng nh\u1eadp\n- Formula l\u1ecdc: `[Sale_PIC] = USEREMAIL()`\n- Hi\u1ec3n th\u1ecb c\u1ed9t: Deal_ID, Ten_Deal, Stage, Gia_Tri_Du_Kien, Ngay_Du_Kien_Dong, Ngay_Cap_Nhat_Stage\n\n#### View 3: Chi Ti\u1ebft Deal\n- View type: Detail\n- Tabs: Th\u00f4ng tin chung | L\u1ecbch s\u1eed ho\u1ea1t \u0111\u1ed9ng | C\u00f4ng vi\u1ec7c\n- Inline view cho DEAL_ACTIVITIES v\u00e0 TASKS li\u00ean k\u1ebft\n\n#### View 4: Dashboard Qu\u1ea3n L\u00fd\n- View type: Dashboard (k\u1ebft h\u1ee3p nhi\u1ec1u chart)\n- Chart 1: Donut chart - S\u1ed1 deal theo Stage\n- Chart 2: Bar chart - Gi\u00e1 tr\u1ecb pipeline theo sale\n- Chart 3: Line chart - S\u1ed1 deal m\u1edbi theo th\u00e1ng\n\n#### View 5: Deals C\u1ea7n Ch\u00fa \u00dd (cho Manager)\n- Filter: Deals kh\u00f4ng c\u1eadp nh\u1eadt stage qu\u00e1 7 ng\u00e0y\n- Formula: `TODAY() - [Ngay_Cap_Nhat_Stage] > 7`\n\n---\n\n## 5. Automation - Gi\u1ea3i Quy\u1ebft V\u1ea5n \u0110\u1ec1 \"Qu\u00ean C\u1eadp Nh\u1eadt\"\n\n\u0110\u00e2y l\u00e0 ph\u1ea7n quan tr\u1ecdng nh\u1ea5t \u0111\u1ec3 gi\u1ea3i quy\u1ebft v\u1ea5n \u0111\u1ec1 sale qu\u00ean c\u1eadp nh\u1eadt.\n\n### Automation 1: Nh\u1eafc Nh\u1edf Khi Deal Kh\u00f4ng C\u1eadp Nh\u1eadt\n\n**Trigger:** Scheduled (ch\u1ea1y m\u1ed7i ng\u00e0y l\u00fac 8:00 s\u00e1ng)\n\n**Condition:**\n```\nAND(\n  [Ket_Qua] = \"In Progress\",\n  (TODAY() - DATE([Ngay_Cap_Nhat_Stage])) >= 3\n)\n```\n\n**Action:** Send Email / Push Notification\n- To: [Sale_PIC]\n- Subject: `Nh\u1eafc nh\u1edf: Deal \"[Ten_Deal]\" ch\u01b0a c\u1eadp nh\u1eadt {{TODAY() - DATE([Ngay_Cap_Nhat_Stage])}} ng\u00e0y`\n- Body: \n```\nXin ch\u00e0o,\n\nDeal [Ten_Deal] - Kh\u00e1ch h\u00e0ng [Khach_Hang_ID] \n\u0111ang \u1edf stage: [Stage]\nCh\u01b0a c\u00f3 c\u1eadp nh\u1eadt trong [s\u1ed1 ng\u00e0y] ng\u00e0y.\n\nVui l\u00f2ng c\u1eadp nh\u1eadt tr\u1ea1ng th\u00e1i ho\u1eb7c ghi ch\u00fa ho\u1ea1t \u0111\u1ed9ng m\u1edbi nh\u1ea5t.\n\n[Link v\u00e0o deal]\n```\n\n### Automation 2: Th\u00f4ng B\u00e1o Khi \u0110\u1ed5i Stage\n\n**Trigger:** Data Change - When Stage column changes\n\n**Action:** \n1. T\u1ef1 \u0111\u1ed9ng t\u1ea1o record v\u00e0o DEAL_ACTIVITIES (ghi l\u1ea1i stage c\u0169 v\u00e0 m\u1edbi)\n2. G\u1eedi th\u00f4ng b\u00e1o cho Manager\n3. C\u1eadp nh\u1eadt Ngay_Cap_Nhat_Stage = NOW()\n\n**Bot \u0111\u1ec3 ghi l\u1ecbch s\u1eed t\u1ef1 \u0111\u1ed9ng:**\n```\nAdd row to DEAL_ACTIVITIES:\n  Deal_ID = [Deal_ID]\n  Loai_Hoat_Dong = \"\u0110\u1ed5i Stage\"\n  Mo_Ta = CONCATENATE(\"Stage \u0111\u1ed5i t\u1eeb \", [_THISROW_BEFORE].[Stage], \" \u2192 \", [Stage])\n  Ngay_Thuc_Hien = NOW()\n  Nguoi_Thuc_Hien = USEREMAIL()\n  Stage_Truoc = [_THISROW_BEFORE].[Stage]\n  Stage_Sau = [Stage]\n```\n\n### Automation 3: C\u1ea3nh B\u00e1o Deal S\u1eafp H\u1ebft H\u1ea1n\n\n**Trigger:** Scheduled (h\u00e0ng ng\u00e0y)\n\n**Condition:**\n```\nAND(\n  [Ket_Qua] = \"In Progress\",\n  [Ngay_Du_Kien_Dong] - TODAY() <= 7,\n  [Ngay_Du_Kien_Dong] >= TODAY()\n)\n```\n\n**Action:** Push notification + Email cho sale v\u00e0 manager\n\n### Automation 4: T\u1ed5ng K\u1ebft Tu\u1ea7n (Weekly Summary)\n\n**Trigger:** Scheduled - M\u1ed7i th\u1ee9 6 l\u00fac 17:00\n\n**Action:** G\u1eedi email t\u1ed5ng k\u1ebft cho t\u1eebng sale:\n- S\u1ed1 deal m\u1edbi trong tu\u1ea7n\n- S\u1ed1 deal \u0111\u00e3 \u0111\u1ed5i stage\n- Deals c\u1ea7n follow up\n\n---\n\n## 6. Security & Ph\u00e2n Quy\u1ec1n\n\n### C\u1ea5u h\u00ecnh Security Filters\n\n**Sale th\u00f4ng th\u01b0\u1eddng - ch\u1ec9 xem deal c\u1ee7a m\u00ecnh:**\n```\nDEALS: [Sale_PIC] = USEREMAIL()\nDEAL_ACTIVITIES: LOOKUP([Deal_ID], \"DEALS\", \"Deal_ID\", \"Sale_PIC\") = USEREMAIL()\nTASKS: [Assigned_To] = USEREMAIL()\n```\n\n**Manager/Admin - xem t\u1ea5t c\u1ea3:**\n```\nIN(USEREMAIL(), {\"manager@company.com\", \"admin@company.com\"})\n```\n\n### Role-based Access (d\u00f9ng b\u1ea3ng USERS)\n\n| Role | Quy\u1ec1n |\n|------|-------|\n| Sale | Xem/s\u1eeda deals c\u1ee7a m\u00ecnh, th\u00eam activity |\n| Team Lead | Xem deals c\u1ee7a c\u1ea3 team, kh\u00f4ng x\u00f3a |\n| Manager | Full access, xem b\u00e1o c\u00e1o |\n| Admin | Full access + c\u1ea5u h\u00ecnh h\u1ec7 th\u1ed1ng |\n\n---\n\n## 7. Actions (N\u00fat H\u00e0nh \u0110\u1ed9ng Nhanh)\n\nTh\u00eam c\u00e1c action button trong deal detail \u0111\u1ec3 sale thao t\u00e1c nhanh:\n\n### Action 1: Chuy\u1ec3n Stage Nhanh\n- T\u00ean: \"Chuy\u1ec3n sang b\u01b0\u1edbc ti\u1ebfp theo\"\n- Type: Data: set the value of some columns\n- Set Stage = b\u01b0\u1edbc ti\u1ebfp theo trong pipeline\n- Confirmation: \"X\u00e1c nh\u1eadn chuy\u1ec3n deal sang [stage m\u1edbi]?\"\n\n### Action 2: Ghi Nhanh Ho\u1ea1t \u0110\u1ed9ng\n- T\u00ean: \"+ Ghi ho\u1ea1t \u0111\u1ed9ng\"\n- Type: App: go to another view\n- Target: Form view c\u1ee7a DEAL_ACTIVITIES\n- Pre-fill: Deal_ID = [Deal_ID], Ngay_Thuc_Hien = NOW()\n\n### Action 3: \u0110\u00e1nh D\u1ea5u Won/Lost\n- T\u00ean: \"\u0110\u00f3ng Deal\"\n- Type: Data: set the value of some columns\n- Set Ket_Qua, Stage = \"\u0110\u00e3 \u0110\u00f3ng\", Ngay_Cap_Nhat_Stage = NOW()\n\n### Action 4: T\u1ea1o Task Follow-up\n- T\u00ean: \"T\u1ea1o Nh\u1eafc Vi\u1ec7c\"\n- Type: App: go to another view\n- Pre-fill th\u00f4ng tin deal v\u00e0o form TASKS\n\n---\n\n## 8. Reports v\u00e0 KPI Dashboard\n\n### Virtual Columns H\u1ed7 Tr\u1ee3 B\u00e1o C\u00e1o\n\nTh\u00eam c\u00e1c virtual column v\u00e0o b\u1ea3ng DEALS:\n\n**So_Ngay_O_Stage:**\n```\nTODAY() - DATE([Ngay_Cap_Nhat_Stage])\n```\n\n**Canh_Bao_Tre:**\n```\nIF([So_Ngay_O_Stage] > 7, \"C\u1ea7n ch\u00fa \u00fd\", \"B\u00ecnh th\u01b0\u1eddng\")\n```\n\n**Gia_Tri_Weight:**\n```\n[Gia_Tri_Du_Kien] * [Xac_Suat_Chot]\n```\n\n### Slice cho Dashboard\n\n**Slice \"Deals T\u00f4i C\u1ea7n L\u00e0m Ngay\":**\n```\nAND(\n  [Sale_PIC] = USEREMAIL(),\n  [Ket_Qua] = \"In Progress\",\n  [So_Ngay_O_Stage] >= 3\n)\n```\n\n**Slice \"Pipeline Th\u00e1ng N\u00e0y\":**\n```\nAND(\n  MONTH([Ngay_Du_Kien_Dong]) = MONTH(TODAY()),\n  YEAR([Ngay_Du_Kien_Dong]) = YEAR(TODAY()),\n  [Ket_Qua] = \"In Progress\"\n)\n```\n\n---\n\n## 9. H\u01b0\u1edbng D\u1eabn Tri\u1ec3n Khai T\u1eebng B\u01b0\u1edbc\n\n### B\u01b0\u1edbc 1: Chu\u1ea9n B\u1ecb Google Sheets (30 ph\u00fat)\n1. T\u1ea1o file Google Sheets m\u1edbi\n2. T\u1ea1o 4 sheet: DEALS, DEAL_ACTIVITIES, CUSTOMERS, TASKS, USERS\n3. \u0110i\u1ec1n header theo c\u1ea5u tr\u00fac \u1edf m\u1ee5c 3\n4. Nh\u1eadp 5-10 deal m\u1eabu \u0111\u1ec3 test\n\n### B\u01b0\u1edbc 2: T\u1ea1o App AppSheet (1 gi\u1edd)\n1. V\u00e0o appsheet.com, \u0111\u0103ng nh\u1eadp b\u1eb1ng Google\n2. New App \u2192 Start with existing data \u2192 Google Sheets\n3. Ch\u1ecdn file v\u1eeba t\u1ea1o\n4. C\u1ea5u h\u00ecnh ki\u1ec3u d\u1eef li\u1ec7u cho t\u1eebng c\u1ed9t\n\n### B\u01b0\u1edbc 3: Thi\u1ebft K\u1ebf Views (2 gi\u1edd)\n1. T\u1ea1o Kanban/Deck view nh\u00f3m theo Stage\n2. T\u1ea1o Detail view v\u1edbi inline related tables\n3. T\u1ea1o Dashboard v\u1edbi charts\n4. C\u1ea5u h\u00ecnh navigation menu\n\n### B\u01b0\u1edbc 4: C\u00e0i \u0110\u1eb7t Automation (1 gi\u1edd)\n1. T\u1ea1o bot nh\u1eafc nh\u1edf h\u00e0ng ng\u00e0y\n2. T\u1ea1o bot ghi l\u1ecbch s\u1eed khi \u0111\u1ed5i stage\n3. Test automation v\u1edbi deal th\u1eed\n\n### B\u01b0\u1edbc 5: Ph\u00e2n Quy\u1ec1n (30 ph\u00fat)\n1. C\u1ea5u h\u00ecnh Security Filters\n2. Test v\u1edbi 2-3 account kh\u00e1c nhau\n\n### B\u01b0\u1edbc 6: Training (1 bu\u1ed5i)\n1. H\u01b0\u1edbng d\u1eabn sale c\u00e1ch th\u00eam deal, c\u1eadp nh\u1eadt stage\n2. H\u01b0\u1edbng d\u1eabn manager xem dashboard\n3. Thi\u1ebft l\u1eadp quy tr\u00ecnh: m\u1ed7i cu\u1ed9c g\u1eb7p/g\u1ecdi ph\u1ea3i log activity\n\n---\n\n## 10. M\u1eb9o Th\u1ef1c T\u1ebf \u0111\u1ec3 Sale Kh\u00f4ng Qu\u00ean C\u1eadp Nh\u1eadt\n\n1. **Quy t\u1eafc 5 ph\u00fat**: Sau m\u1ed7i cu\u1ed9c g\u1ecdi/g\u1eb7p, d\u00e0nh 5 ph\u00fat ghi activity ngay tr\u00ean app\n2. **Morning review**: M\u1ed7i s\u00e1ng, sale xem m\u00e0n h\u00ecnh \"Deals c\u1ea7n ch\u00fa \u00fd\" tr\u01b0\u1edbc khi l\u00e0m vi\u1ec7c\n3. **KPI g\u1eafn v\u1edbi app**: G\u1eafn s\u1ed1 deal \u0111\u00e3 c\u1eadp nh\u1eadt v\u00e0o KPI tu\u1ea7n/th\u00e1ng c\u1ee7a sale\n4. **Notification push**: B\u1eadt notification tr\u00ean \u0111i\u1ec7n tho\u1ea1i \u0111\u1ec3 nh\u1eadn nh\u1eafc nh\u1edf k\u1ecbp th\u1eddi\n5. **Quick log**: T\u1ea1o shortcut v\u00e0o app tr\u00ean m\u00e0n h\u00ecnh \u0111i\u1ec7n tho\u1ea1i, \u0111\u1eb7t widget AppSheet\n\n---\n\n## 11. T\u1ed5ng Chi Ph\u00ed v\u00e0 L\u1ef1a Ch\u1ecdn Plan\n\n| Plan | Gi\u00e1 | Ph\u00f9 h\u1ee3p |\n|------|-----|---------|\n| Starter (Free) | $0/th\u00e1ng | 1 app, t\u1ed1i \u0111a 10 users, \u0111\u1ee7 d\u00f9ng cho team nh\u1ecf |\n| Core | $5/user/th\u00e1ng | Automation n\u00e2ng cao, nhi\u1ec1u app h\u01a1n |\n| Enterprise | Li\u00ean h\u1ec7 | Team l\u1edbn, b\u1ea3o m\u1eadt cao |\n\n**Khuy\u1ebfn ngh\u1ecb**: B\u1eaft \u0111\u1ea7u v\u1edbi plan Free \u0111\u1ec3 test, sau khi team adopt th\u00ec n\u00e2ng c\u1ea5p l\u00ean Core \u0111\u1ec3 d\u00f9ng \u0111\u1ea7y \u0111\u1ee7 Automation.\n\n---\n\n## 12. K\u1ebft Lu\u1eadn\n\nModule Pipeline Sale n\u00e0y gi\u1ea3i quy\u1ebft tr\u1ef1c ti\u1ebfp v\u1ea5n \u0111\u1ec1 c\u1ee7a b\u1ea1n:\n\n- **Sale qu\u00ean c\u1eadp nh\u1eadt**: Automation nh\u1eafc nh\u1edf sau 3 ng\u00e0y kh\u00f4ng ho\u1ea1t \u0111\u1ed9ng, giao di\u1ec7n mobile \u0111\u01a1n gi\u1ea3n \u0111\u1ec3 log nhanh\n- **Kh\u00f4ng bi\u1ebft deal \u0111ang \u1edf \u0111\u00e2u**: Kanban view tr\u1ef1c quan theo stage, dashboard t\u1ed5ng quan cho manager\n- **M\u1ea5t l\u1ecbch s\u1eed**: M\u1ecdi thay \u0111\u1ed5i stage \u0111\u1ec1u t\u1ef1 \u0111\u1ed9ng ghi v\u00e0o DEAL_ACTIVITIES\n- **Kh\u00f3 qu\u1ea3n l\u00fd team**: Manager xem \u0111\u01b0\u1ee3c to\u00e0n b\u1ed9 pipeline, filter \u0111\u01b0\u1ee3c theo sale/stage/th\u1eddi gian\n\nTh\u1eddi gian tri\u1ec3n khai \u01b0\u1edbc t\u00ednh: **1-2 ng\u00e0y** cho phi\u00ean b\u1ea3n MVP \u0111\u1ea7y \u0111\u1ee7 ch\u1ee9c n\u0103ng c\u01a1 b\u1ea3n.\n"}], "grading": {"eval_id": 1, "config": "without_skill", "assertions": [{"text": "stage/status enum", "passed": true, "evidence": "Found '\u0111\u00e0m ph\u00e1n'"}, {"text": "table structure with columns", "passed": true, "evidence": "Found 'column'"}, {"text": "automation reminder", "passed": true, "evidence": "Found 'automation'"}, {"text": "security filter", "passed": true, "evidence": "Found 'security'"}, {"text": "mobile UX", "passed": true, "evidence": "Found 'mobile'"}]}}, {"id": "eval-2-appsheet-table-with_skill", "prompt": "Thi\u1ebft k\u1ebf to\u00e0n b\u1ed9 c\u1ea5u tr\u00fac database cho h\u1ec7 th\u1ed1ng AppSheet qu\u1ea3n l\u00fd ngu\u1ed3n \u0111\u1ea5t B\u0110S c\u00f4ng nghi\u1ec7p. H\u1ec7 th\u1ed1ng c\u1ea7n l\u01b0u th\u00f4ng tin ch\u1ee7 \u0111\u1ea5t, l\u00f4 \u0111\u1ea5t, v\u00e0 k\u1ebft n\u1ed1i v\u1edbi pipeline b\u00e1n h\u00e0ng.", "eval_id": 2, "outputs": [{"name": "response.md", "type": "text", "content": "# Thi\u1ebft K\u1ebf Database AppSheet \u2014 H\u1ec7 Th\u1ed1ng Qu\u1ea3n L\u00fd Ngu\u1ed3n \u0110\u1ea5t B\u0110S C\u00f4ng Nghi\u1ec7p\n\n---\n\n## 1. PH\u00c2N T\u00cdCH NGHI\u1ec6P V\u1ee4\n\n**B\u00e0i to\u00e1n c\u1ed1t l\u00f5i:**\nH\u1ec7 th\u1ed1ng c\u1ea7n qu\u1ea3n l\u00fd v\u00f2ng \u0111\u1eddi \u0111\u1ea7y \u0111\u1ee7 c\u1ee7a m\u1ed9t l\u00f4 \u0111\u1ea5t c\u00f4ng nghi\u1ec7p: t\u1eeb l\u00fac ch\u1ee7 \u0111\u1ea5t mu\u1ed1n b\u00e1n \u2192 sale ti\u1ebfp nh\u1eadn \u2192 giao b\u00e1n cho kh\u00e1ch \u2192 \u0111\u00e0m ph\u00e1n \u2192 ch\u1ed1t \u2192 thanh to\u00e1n. Ba th\u1ef1c th\u1ec3 trung t\u00e2m l\u00e0 **Ch\u1ee7 \u0110\u1ea5t**, **L\u00f4 \u0110\u1ea5t (Ngu\u1ed3n \u0110\u1ea5t)**, v\u00e0 **Pipeline Sale**.\n\n**Pain point th\u01b0\u1eddng g\u1eb7p n\u1ebfu kh\u00f4ng c\u00f3 h\u1ec7 th\u1ed1ng:**\n- Sale l\u01b0u th\u00f4ng tin ch\u1ee7 \u0111\u1ea5t r\u1ea3i r\u00e1c trong \u0111i\u1ec7n tho\u1ea1i, Zalo, Excel \u2014 kh\u00f4ng ai bi\u1ebft l\u00f4 \u0111\u1ea5t n\u00e0o \u0111ang \u0111\u01b0\u1ee3c giao b\u00e1n\n- Kh\u00f4ng c\u00f3 tracking: kh\u00e1ch quan t\u00e2m l\u00f4 n\u00e0o, \u0111ang \u1edf stage n\u00e0o, ai \u0111ang x\u1eed l\u00fd\n- K\u1ebf to\u00e1n kh\u00f4ng bi\u1ebft giao d\u1ecbch n\u00e0o \u0111\u00e3 ch\u1ed1t \u0111\u1ec3 so\u1ea1n h\u1ee3p \u0111\u1ed3ng\n- Gi\u00e1m \u0111\u1ed1c kh\u00f4ng c\u00f3 dashboard \u0111\u1ec3 th\u1ea5y to\u00e0n c\u1ea3nh danh m\u1ee5c\n\n---\n\n## 2. T\u1ed4NG QUAN KI\u1ebeN TR\u00daC DATABASE\n\nH\u1ec7 th\u1ed1ng g\u1ed3m **6 b\u1ea3ng ch\u00ednh** chia l\u00e0m 3 nh\u00f3m:\n\n```\nNh\u00f3m 1 \u2014 T\u00e0i s\u1ea3n & Ch\u1ee7 s\u1edf h\u1eefu:\n  CHU_DAT \u2190 NGUON_DAT\n\nNh\u00f3m 2 \u2014 Kh\u00e1ch h\u00e0ng & Pipeline:\n  KHACH_HANG \u2190 PIPELINE_SALE \u2192 NGUON_DAT\n\nNh\u00f3m 3 \u2014 Giao d\u1ecbch & K\u1ebf to\u00e1n:\n  PIPELINE_SALE \u2190 GIAO_DICH \u2190 THANH_TOAN\n```\n\n---\n\n## 3. C\u1ea4U TR\u00daC C\u00c1C B\u1ea2NG (TABLE STRUCTURE)\n\n### B\u1ea2NG 1: CHU_DAT \u2014 H\u1ed3 s\u01a1 ch\u1ee7 \u0111\u1ea5t\n\n| Column | Type | Required | Ghi ch\u00fa |\n|---|---|---|---|\n| **ID_ChuDat** | Text (Key) | Yes | Auto format: CD-001, CD-002... |\n| Ho_Ten | Text | Yes | H\u1ecd t\u00ean \u0111\u1ea7y \u0111\u1ee7 |\n| SDT | Phone | Yes | S\u1ed1 \u0111i\u1ec7n tho\u1ea1i ch\u00ednh |\n| SDT_Phu | Phone | No | S\u1ed1 ph\u1ee5 / Zalo |\n| Email | Email | No | |\n| DiaChi | Text | No | \u0110\u1ecba ch\u1ec9 li\u00ean h\u1ec7 |\n| LoaiGiayTo | Enum | Yes | CMND / CCCD / H\u1ed9 chi\u1ebfu / Doanh nghi\u1ec7p |\n| SoGiayTo | Text | Yes | S\u1ed1 CMND/CCCD/MST |\n| NguonTiepCan | Enum | Yes | Referral / Cold call / M\u1ea1ng XH / Gi\u1edbi thi\u1ec7u n\u1ed9i b\u1ed9 |\n| Sale_PhuTrach | Ref \u2192 NHAN_SU | Yes | Sale ti\u1ebfp nh\u1eadn ch\u1ee7 \u0111\u1ea5t |\n| Status | Enum | Yes | Ti\u1ec1m n\u0103ng / \u0110ang h\u1ee3p t\u00e1c / Ng\u01b0ng h\u1ee3p t\u00e1c |\n| Ngay_TiepNhan | Date | Yes | Ng\u00e0y sale l\u1ea5y th\u00f4ng tin |\n| LichSu_LienHe | LongText | No | Ghi ch\u00fa l\u1ecbch s\u1eed trao \u0111\u1ed5i |\n| Anh_GiayTo | Image | No | Ch\u1ee5p CMND/CCCD |\n\n**Key column:** ID_ChuDat\n**Display name:** Ho_Ten\n\n---\n\n### B\u1ea2NG 2: NGUON_DAT \u2014 Th\u00f4ng tin l\u00f4 \u0111\u1ea5t\n\n| Column | Type | Required | Ghi ch\u00fa |\n|---|---|---|---|\n| **ID_Nguon** | Text (Key) | Yes | Auto format: ND-2024-001 |\n| Ten_LoiDat | Text | Yes | T\u00ean g\u1ecdi n\u1ed9i b\u1ed9 (VD: \"\u0110\u1ea5t KCN B\u00ecnh D\u01b0\u01a1ng 5ha\") |\n| ChuDat_Ref | Ref \u2192 CHU_DAT | Yes | Li\u00ean k\u1ebft ch\u1ee7 \u0111\u1ea5t |\n| DienTich_m2 | Decimal | Yes | Di\u1ec7n t\u00edch m\u00b2 |\n| DienTich_Ha | Formula | \u2014 | `=[DienTich_m2]/10000` \u2014 t\u1ef1 t\u00ednh |\n| GiaBan_Ty | Decimal | Yes | Gi\u00e1 ch\u1ee7 \u0111\u1ea5t ch\u00e0o b\u00e1n (t\u1ef7 VN\u0110) |\n| GiaThietLap_Ty | Decimal | No | Gi\u00e1 th\u1ea5p nh\u1ea5t ch\u1ee7 \u0111\u1ea5t ch\u1ea5p nh\u1eadn (n\u1ed9i b\u1ed9) |\n| GiaDauRa_Ty | Decimal | No | Gi\u00e1 sale \u0111\u01b0a ra th\u1ecb tr\u01b0\u1eddng |\n| HoaHong_Pct | Decimal | No | % hoa h\u1ed3ng sale (n\u1ebfu th\u1ecfa thu\u1eadn) |\n| Tinh_ThanhPho | Enum | Yes | H\u00e0 N\u1ed9i / TP.HCM / B\u00ecnh D\u01b0\u01a1ng / \u0110\u1ed3ng Nai / Long An / H\u1ea3i Ph\u00f2ng / Kh\u00e1c |\n| Huyen_Quan | Text | Yes | Huy\u1ec7n / Qu\u1eadn |\n| DiaChi_DayDu | Text | No | \u0110\u1ecba ch\u1ec9 chi ti\u1ebft |\n| ViTri_GPS | LatLong | No | T\u1ecda \u0111\u1ed9 b\u1ea3n \u0111\u1ed3 |\n| TenKhuCongNghiep | Text | No | T\u00ean KCN l\u00e2n c\u1eadn ho\u1eb7c thu\u1ed9c KCN |\n| MucDichSuDung | Enum | Yes | \u0110\u1ea5t KCN / Nh\u00e0 x\u01b0\u1edfng / Kho b\u00e3i / \u0110\u1ea5t \u1edf c\u00f4ng nghi\u1ec7p / \u0110\u1ea5t n\u00f4ng nghi\u1ec7p chuy\u1ec3n \u0111\u1ed5i |\n| TinhTrang_PhapLy | Enum | Yes | S\u1ed5 \u0111\u1ecf \u0111\u1ea7y \u0111\u1ee7 / S\u1ed5 h\u1ed3ng / Ch\u1edd c\u1ea5p s\u1ed5 / \u0110ang gi\u1ea3i ph\u00f3ng m\u1eb7t b\u1eb1ng / Tranh ch\u1ea5p |\n| TinhTrang_VatLy | Enum | Yes | \u0110\u1ea5t tr\u1ed1ng / C\u00f3 c\u00f4ng tr\u00ecnh / \u0110ang cho thu\u00ea / \u0110ang x\u00e2y d\u1ef1ng |\n| HaTang_KetNoi | LongText | No | M\u00f4 t\u1ea3 h\u1ea1 t\u1ea7ng (\u0111i\u1ec7n, n\u01b0\u1edbc, \u0111\u01b0\u1eddng, c\u1ea3ng...) |\n| Sale_PhuTrach | Ref \u2192 NHAN_SU | Yes | Sale \u0111\u01b0\u1ee3c ph\u00e2n c\u00f4ng giao b\u00e1n |\n| Status | Enum | Yes | M\u1edbi ti\u1ebfp nh\u1eadn / \u0110ang giao b\u00e1n / \u0110ang \u0111\u00e0m ph\u00e1n / \u0110\u00e3 ch\u1ed1t / Ng\u1eebng b\u00e1n / Ch\u1edd ph\u00e1p l\u00fd |\n| Ngay_TiepNhan | Date | Yes | Ng\u00e0y l\u1ea5y th\u00f4ng tin t\u1eeb ch\u1ee7 \u0111\u1ea5t |\n| Ngay_CapNhat | DateTime | Auto | T\u1ef1 c\u1eadp nh\u1eadt khi c\u00f3 thay \u0111\u1ed5i |\n| Anh_TongQuan | ImageList | No | \u1ea2nh l\u00f4 \u0111\u1ea5t (t\u1ed1i \u0111a 10 \u1ea3nh) |\n| FilePapLy | File | No | File ph\u00e1p l\u00fd \u0111\u00ednh k\u00e8m (PDF) |\n| Ghi_Chu | LongText | No | Ghi ch\u00fa n\u1ed9i b\u1ed9 |\n\n**Key column:** ID_Nguon\n**Display name:** Ten_LoiDat\n\n**Enum Status \u2014 lu\u1ed3ng chuy\u1ec3n tr\u1ea1ng th\u00e1i:**\n```\nM\u1edbi ti\u1ebfp nh\u1eadn \u2192 \u0110ang giao b\u00e1n \u2192 \u0110ang \u0111\u00e0m ph\u00e1n \u2192 \u0110\u00e3 ch\u1ed1t\n                                                 \u2192 Ng\u1eebng b\u00e1n (ch\u1ee7 \u0111\u1ea5t r\u00fat)\n                              \u2192 Ch\u1edd ph\u00e1p l\u00fd (t\u1ea1m d\u1eebng)\n```\n\n---\n\n### B\u1ea2NG 3: KHACH_HANG \u2014 CRM kh\u00e1ch mua\n\n| Column | Type | Required | Ghi ch\u00fa |\n|---|---|---|---|\n| **ID_KH** | Text (Key) | Yes | Auto: KH-001 |\n| Ten_KH | Text | Yes | T\u00ean c\u00e1 nh\u00e2n ho\u1eb7c c\u00f4ng ty |\n| NguoiDaiDien | Text | No | N\u1ebfu l\u00e0 doanh nghi\u1ec7p |\n| SDT | Phone | Yes | |\n| Email | Email | No | |\n| LoaiKH | Enum | Yes | C\u00e1 nh\u00e2n / Doanh nghi\u1ec7p trong n\u01b0\u1edbc / FDI |\n| NguonKH | Enum | Yes | Referral / Marketing online / Cold call / Website / H\u1ed9i th\u1ea3o |\n| NhuCau_DienTich | Text | No | VD: \"2-5 ha\" |\n| NhuCau_ViTri | Text | No | VD: \"B\u00ecnh D\u01b0\u01a1ng ho\u1eb7c \u0110\u1ed3ng Nai\" |\n| NhuCau_MucDich | Text | No | VD: \"X\u00e2y nh\u00e0 m\u00e1y s\u1ea3n xu\u1ea5t linh ki\u1ec7n \u0111i\u1ec7n t\u1eed\" |\n| NganSach_Ty | Decimal | No | Ng\u00e2n s\u00e1ch t\u1ed1i \u0111a |\n| ThoiGian_CanMua | Enum | No | Ngay / 1-3 th\u00e1ng / 3-6 th\u00e1ng / Linh ho\u1ea1t |\n| Sale_PhuTrach | Ref \u2192 NHAN_SU | Yes | |\n| Status | Enum | Yes | Lead m\u1edbi / \u0110ang t\u01b0 v\u1ea5n / Ti\u1ec1m n\u0103ng cao / Ng\u01b0ng theo \u0111u\u1ed5i |\n| Ngay_TiepNhan | Date | Yes | |\n| LichSu_TuongTac | LongText | No | Ghi ch\u00fa c\u00e1c bu\u1ed5i g\u1eb7p, trao \u0111\u1ed5i |\n\n**Key column:** ID_KH\n**Display name:** Ten_KH\n\n---\n\n### B\u1ea2NG 4: PIPELINE_SALE \u2014 Theo d\u00f5i giao d\u1ecbch\n\n\u0110\u00e2y l\u00e0 b\u1ea3ng trung t\u00e2m, k\u1ebft n\u1ed1i Kh\u00e1ch H\u00e0ng \u2194 Ngu\u1ed3n \u0110\u1ea5t v\u00e0 tracking to\u00e0n b\u1ed9 qu\u00e1 tr\u00ecnh \u0111\u00e0m ph\u00e1n.\n\n| Column | Type | Required | Ghi ch\u00fa |\n|---|---|---|---|\n| **ID_Pipeline** | Text (Key) | Yes | Auto: PL-2024-001 |\n| KH_Ref | Ref \u2192 KHACH_HANG | Yes | Kh\u00e1ch \u0111ang quan t\u00e2m |\n| Dat_Ref | Ref \u2192 NGUON_DAT | Yes | L\u00f4 \u0111\u1ea5t \u0111ang xem x\u00e9t |\n| Sale_Ref | Ref \u2192 NHAN_SU | Yes | Sale \u0111ang x\u1eed l\u00fd deal n\u00e0y |\n| Stage | Enum | Yes | Quan t\u00e2m / \u0110ang t\u01b0 v\u1ea5n / \u0110\u00e3 xem th\u1ef1c \u0111\u1ecba / \u0110ang \u0111\u00e0m ph\u00e1n / Ch\u1edd quy\u1ebft \u0111\u1ecbnh / Ch\u1ed1t / R\u1edbt |\n| LyDo_Rot | Text | No | B\u1eaft bu\u1ed9c \u0111i\u1ec1n n\u1ebfu Stage = \"R\u1edbt\" |\n| GiaDeXuat_Ty | Decimal | No | Gi\u00e1 sale \u0111\u1ec1 xu\u1ea5t v\u1edbi kh\u00e1ch |\n| GiaDamPhan_Ty | Decimal | No | Gi\u00e1 \u0111ang \u0111\u00e0m ph\u00e1n |\n| XacSuat_Chot | Enum | Yes | 10% / 25% / 50% / 75% / 90% / 100% |\n| GiaTriDuKien_Ty | Formula | \u2014 | `=[GiaDamPhan_Ty] * IF([XacSuat_Chot]=\"10%\",0.1,IF([XacSuat_Chot]=\"25%\",0.25,...))` |\n| Ngay_TiepCan | Date | Yes | Ng\u00e0y \u0111\u1ea7u ti\u00ean kh\u00e1ch quan t\u00e2m l\u00f4 n\u00e0y |\n| Ngay_XemThucDia | Date | No | |\n| Ngay_DuKien_Chot | Date | No | D\u1ef1 ki\u1ebfn ch\u1ed1t deal |\n| Ngay_CapNhat | DateTime | Auto | T\u1ef1 c\u1eadp nh\u1eadt |\n| Ghi_Chu | LongText | No | Di\u1ec5n bi\u1ebfn \u0111\u00e0m ph\u00e1n, y\u00eau c\u1ea7u \u0111\u1eb7c bi\u1ec7t |\n\n**Key column:** ID_Pipeline\n**Display name:** C\u00f4ng th\u1ee9c `=[ID_Pipeline] & \" | \" & [KH_Ref] & \" \u2014 \" & [Dat_Ref]`\n\n**Enum Stage \u2014 Pipeline Funnel:**\n```\nQuan t\u00e2m (10%)\n   \u2192 \u0110ang t\u01b0 v\u1ea5n (25%)\n      \u2192 \u0110\u00e3 xem th\u1ef1c \u0111\u1ecba (50%)\n         \u2192 \u0110ang \u0111\u00e0m ph\u00e1n (75%)\n            \u2192 Ch\u1edd quy\u1ebft \u0111\u1ecbnh (90%)\n               \u2192 Ch\u1ed1t (100%) \u2713\n               \u2192 R\u1edbt \u2717\n```\n\n---\n\n### B\u1ea2NG 5: GIAO_DICH \u2014 H\u1ee3p \u0111\u1ed3ng\n\nB\u1ea3ng n\u00e0y ch\u1ec9 \u0111\u01b0\u1ee3c t\u1ea1o khi Pipeline Stage = \"Ch\u1ed1t\".\n\n| Column | Type | Required | Ghi ch\u00fa |\n|---|---|---|---|\n| **ID_GiaoDich** | Text (Key) | Yes | Auto: GD-2024-001 |\n| Pipeline_Ref | Ref \u2192 PIPELINE_SALE | Yes | Link v\u1ec1 pipeline g\u1ed1c |\n| GiaTriHopDong_Ty | Decimal | Yes | Gi\u00e1 tr\u1ecb h\u1ee3p \u0111\u1ed3ng ch\u00ednh th\u1ee9c |\n| HoaHong_Sale_Ty | Decimal | No | Hoa h\u1ed3ng sale \u0111\u01b0\u1ee3c nh\u1eadn |\n| Ngay_KyHopDong | Date | No | |\n| SoHopDong | Text | No | S\u1ed1 H\u0110 do k\u1ebf to\u00e1n \u0111\u00e1nh |\n| TrangThai_HopDong | Enum | Yes | So\u1ea1n th\u1ea3o / \u0110\u00e3 k\u00fd / \u0110ang thanh to\u00e1n / Ho\u00e0n t\u1ea5t / H\u1ee7y |\n| KeToan_PhuTrach | Ref \u2192 NHAN_SU | Yes | K\u1ebf to\u00e1n x\u1eed l\u00fd h\u1ee3p \u0111\u1ed3ng n\u00e0y |\n| TongTienDaThu_Ty | Formula | \u2014 | `=SUM(SELECT(THANH_TOAN[SoTien_Ty], [GiaoDich_Ref]=[ID_GiaoDich], [TrangThai]=\"\u0110\u00e3 nh\u1eadn\"))` |\n| ConLai_PhamThu_Ty | Formula | \u2014 | `=[GiaTriHopDong_Ty] - [TongTienDaThu_Ty]` |\n| PhanTram_DaThu | Formula | \u2014 | `=([TongTienDaThu_Ty] / [GiaTriHopDong_Ty]) * 100` |\n| File_HopDong | File | No | Upload PDF h\u1ee3p \u0111\u1ed3ng k\u00fd |\n| Ghi_Chu | LongText | No | |\n\n---\n\n### B\u1ea2NG 6: THANH_TOAN \u2014 \u0110\u1ee3t thanh to\u00e1n\n\n| Column | Type | Required | Ghi ch\u00fa |\n|---|---|---|---|\n| **ID_ThanhToan** | Text (Key) | Yes | Auto: TT-2024-001 |\n| GiaoDich_Ref | Ref \u2192 GIAO_DICH | Yes | Thu\u1ed9c h\u1ee3p \u0111\u1ed3ng n\u00e0o |\n| Dot_ThanhToan | Number | Yes | \u0110\u1ee3t 1, 2, 3... |\n| TenDot | Text | No | VD: \"\u0110\u1eb7t c\u1ecdc\", \"Thanh to\u00e1n l\u1ea7n 1\", \"Thanh to\u00e1n cu\u1ed1i\" |\n| SoTien_Ty | Decimal | Yes | S\u1ed1 ti\u1ec1n \u0111\u1ee3t n\u00e0y |\n| NgayDuKien | Date | Yes | Ng\u00e0y d\u1ef1 ki\u1ebfn nh\u1eadn ti\u1ec1n |\n| NgayThucNhan | Date | No | \u0110\u1ec3 tr\u1ed1ng n\u1ebfu ch\u01b0a nh\u1eadn |\n| TrangThai | Enum | Yes | Ch\u01b0a \u0111\u1ebfn h\u1ea1n / \u0110\u1ebfn h\u1ea1n / \u0110\u00e3 nh\u1eadn / Tr\u1ec5 h\u1ea1n |\n| HinhThuc_ThanhToan | Enum | No | Chuy\u1ec3n kho\u1ea3n / Ti\u1ec1n m\u1eb7t / S\u00e9c |\n| SoTaiKhoan | Text | No | TK nh\u1eadn ti\u1ec1n |\n| FileMinhChung | File | No | Upload \u1ea3nh/PDF sao k\u00ea |\n| GhiChu | LongText | No | |\n\n---\n\n## 4. S\u01a0 \u0110\u1ed2 QUAN H\u1ec6 (RELATIONSHIPS)\n\n```\nNHAN_SU (b\u1ea3ng nh\u00e2n s\u1ef1 \u2014 parent)\n   \u251c\u2500\u2500 CHU_DAT.Sale_PhuTrach  (Ref)\n   \u251c\u2500\u2500 NGUON_DAT.Sale_PhuTrach (Ref)\n   \u251c\u2500\u2500 KHACH_HANG.Sale_PhuTrach (Ref)\n   \u251c\u2500\u2500 PIPELINE_SALE.Sale_Ref  (Ref)\n   \u2514\u2500\u2500 GIAO_DICH.KeToan_PhuTrach (Ref)\n\nCHU_DAT (parent)\n   \u2514\u2500\u2500 NGUON_DAT.ChuDat_Ref [1 ch\u1ee7 \u0111\u1ea5t \u2192 nhi\u1ec1u l\u00f4 \u0111\u1ea5t]\n\nNGUON_DAT (parent)\n   \u2514\u2500\u2500 PIPELINE_SALE.Dat_Ref [1 l\u00f4 \u0111\u1ea5t \u2192 nhi\u1ec1u pipeline]\n\nKHACH_HANG (parent)\n   \u2514\u2500\u2500 PIPELINE_SALE.KH_Ref [1 kh\u00e1ch \u2192 nhi\u1ec1u pipeline]\n\nPIPELINE_SALE (parent)\n   \u2514\u2500\u2500 GIAO_DICH.Pipeline_Ref [1 pipeline \u2192 1 giao d\u1ecbch]\n\nGIAO_DICH (parent)\n   \u2514\u2500\u2500 THANH_TOAN.GiaoDich_Ref [1 h\u1ee3p \u0111\u1ed3ng \u2192 nhi\u1ec1u \u0111\u1ee3t thanh to\u00e1n]\n```\n\n**Cascade rules:**\n- X\u00f3a CHU_DAT \u2192 C\u1ea3nh b\u00e1o (kh\u00f4ng x\u00f3a cascade, v\u00ec c\u00f2n NGUON_DAT li\u00ean quan)\n- X\u00f3a NGUON_DAT \u2192 Block n\u1ebfu c\u00f3 PIPELINE_SALE \u0111ang active\n- X\u00f3a PIPELINE_SALE \u2192 Block n\u1ebfu Stage = \"Ch\u1ed1t\" v\u00e0 \u0111\u00e3 c\u00f3 GIAO_DICH\n- X\u00f3a GIAO_DICH \u2192 Block n\u1ebfu c\u00f3 THANH_TOAN \u0111\u00e3 nh\u1eadn ti\u1ec1n\n\n---\n\n## 5. AUTOMATION & WORKFLOW\n\n### Auto 1: C\u1ea3nh b\u00e1o ch\u1ee7 \u0111\u1ea5t s\u1eafp h\u1ebft h\u1ea1n h\u1ee3p t\u00e1c\n```\nTrigger: Scheduled \u2014 8:00 s\u00e1ng h\u00e0ng ng\u00e0y\nCondition: [Status]=\"\u0110ang h\u1ee3p t\u00e1c\" AND DATEDIF([Ngay_TiepNhan], TODAY(), \"D\") > 90\nAction: Notify Sale_PhuTrach\nMessage: \"Ch\u1ee7 \u0111\u1ea5t [Ho_Ten] \u2014 \u0111\u00e3 90+ ng\u00e0y ch\u01b0a c\u1eadp nh\u1eadt. C\u1ea7n li\u00ean h\u1ec7 l\u1ea1i.\"\n```\n\n### Auto 2: T\u1ef1 \u0111\u1ed9ng c\u1eadp nh\u1eadt status ngu\u1ed3n \u0111\u1ea5t khi pipeline ch\u1ed1t\n```\nTrigger: Khi PIPELINE_SALE.[Stage] thay \u0111\u1ed5i = \"Ch\u1ed1t\"\nAction: Set row value \u2192 NGUON_DAT.[Status] = \"\u0110\u00e3 ch\u1ed1t\"\nAction: Notify Manager \u2014 \"Ch\u1ed1t deal: [Ten_LoiDat] - Kh\u00e1ch: [KH_Ref]\"\n```\n\n### Auto 3: T\u1ea1o giao d\u1ecbch t\u1ef1 \u0111\u1ed9ng khi pipeline ch\u1ed1t\n```\nTrigger: Khi PIPELINE_SALE.[Stage] thay \u0111\u1ed5i = \"Ch\u1ed1t\"\nAction: Add row \u2192 GIAO_DICH\n  GiaTriHopDong_Ty = [GiaDamPhan_Ty]\n  Pipeline_Ref = [ID_Pipeline]\n  TrangThai_HopDong = \"So\u1ea1n th\u1ea3o\"\nAction: Notify KeToan \u2014 \"C\u00f3 h\u1ee3p \u0111\u1ed3ng m\u1edbi c\u1ea7n so\u1ea1n: [ID_GiaoDich]\"\n```\n\n### Auto 4: C\u1ea3nh b\u00e1o thanh to\u00e1n s\u1eafp \u0111\u1ebfn h\u1ea1n\n```\nTrigger: Scheduled \u2014 8:00 s\u00e1ng h\u00e0ng ng\u00e0y\nCondition: [NgayDuKien] <= TODAY() + 3 AND [TrangThai] = \"Ch\u01b0a \u0111\u1ebfn h\u1ea1n\"\nAction: Send email \u2192 KeToan + Manager\nSubject: \"\u26a0 \u0110\u1ee3t thanh to\u00e1n [TenDot] \u2014 [GiaoDich_Ref] s\u1eafp \u0111\u1ebfn h\u1ea1n\"\n```\n\n### Auto 5: T\u1ef1 \u0111\u1ed9ng \u0111\u00e1nh d\u1ea5u thanh to\u00e1n tr\u1ec5 h\u1ea1n\n```\nTrigger: Scheduled \u2014 7:00 s\u00e1ng h\u00e0ng ng\u00e0y\nCondition: [NgayDuKien] < TODAY() AND [TrangThai] <> \"\u0110\u00e3 nh\u1eadn\"\nAction: Set row value \u2192 [TrangThai] = \"Tr\u1ec5 h\u1ea1n\"\nAction: Notify KeToan + Manager\n```\n\n### Auto 6: Pipeline kh\u00f4ng c\u1eadp nh\u1eadt qu\u00e1 7 ng\u00e0y\n```\nTrigger: Scheduled \u2014 m\u1ed7i th\u1ee9 Hai 9:00 s\u00e1ng\nCondition: [Stage] NOT IN (\"Ch\u1ed1t\",\"R\u1edbt\") AND DATEDIF([Ngay_CapNhat], NOW(), \"D\") > 7\nAction: Notify Sale_Ref \u2014 \"Deal [ID_Pipeline] ch\u01b0a c\u1eadp nh\u1eadt 7 ng\u00e0y. Vui l\u00f2ng c\u1eadp nh\u1eadt ti\u1ebfn \u0111\u1ed9.\"\n```\n\n---\n\n## 6. SECURITY FILTER (PH\u00c2N QUY\u1ec0N)\n\n### Sale th\u01b0\u1eddng\n```\nNGUON_DAT:    [Sale_PhuTrach] = USEREMAIL()\nKHACH_HANG:   [Sale_PhuTrach] = USEREMAIL()\nPIPELINE_SALE: [Sale_Ref] = USEREMAIL()\nCHU_DAT:      IN([ID_ChuDat], SELECT(NGUON_DAT[ChuDat_Ref], [Sale_PhuTrach]=USEREMAIL()))\nGIAO_DICH:    FALSE  (sale kh\u00f4ng xem \u0111\u01b0\u1ee3c h\u1ee3p \u0111\u1ed3ng)\nTHANH_TOAN:   FALSE  (sale kh\u00f4ng xem \u0111\u01b0\u1ee3c thanh to\u00e1n)\n```\n\n### K\u1ebf to\u00e1n\n```\nGIAO_DICH:    [TrangThai_HopDong] <> \"So\u1ea1n th\u1ea3o\"  \u2014 ch\u1ec9 th\u1ea5y H\u0110 \u0111\u00e3 k\u00fd\nTHANH_TOAN:   IN([GiaoDich_Ref], SELECT(GIAO_DICH[ID_GiaoDich], TRUE))\nNGUON_DAT:    TRUE  (xem \u0111\u01b0\u1ee3c t\u1ea5t c\u1ea3 \u0111\u1ec3 \u0111\u1ed1i chi\u1ebfu)\nPIPELINE_SALE: [Stage] = \"Ch\u1ed1t\"  \u2014 k\u1ebf to\u00e1n ch\u1ec9 th\u1ea5y deal \u0111\u00e3 ch\u1ed1t\n```\n\n### Sales Manager\n```\nT\u1ea5t c\u1ea3 b\u1ea3ng: TRUE  (xem to\u00e0n b\u1ed9)\nC\u00f3 quy\u1ec1n edit t\u1ea5t c\u1ea3 record trong team\n```\n\n### Gi\u00e1m \u0111\u1ed1c\n```\nT\u1ea5t c\u1ea3 b\u1ea3ng: TRUE  (read-only tr\u00ean h\u1ea7u h\u1ebft)\nCh\u1ec9 xem Dashboard, kh\u00f4ng edit tr\u1ef1c ti\u1ebfp\n```\n\n---\n\n## 7. UX VIEWS CHO MOBILE\n\n### NGUON_DAT Views\n- **Gallery/Deck view** (default mobile): Hi\u1ec3n th\u1ecb \u1ea3nh l\u00f4 \u0111\u1ea5t + t\u00ean + di\u1ec7n t\u00edch + gi\u00e1 + status badge\n- **Map view**: T\u1ea5t c\u1ea3 l\u00f4 \u0111\u1ea5t tr\u00ean b\u1ea3n \u0111\u1ed3, m\u00e0u theo status (xanh=\u0111ang b\u00e1n, \u0111\u1ecf=\u0111\u00e3 ch\u1ed1t)\n- **Table view**: D\u1ea1ng danh s\u00e1ch l\u1ecdc nhanh theo Status, T\u1ec9nh, Sale\n- **Detail view**: Th\u00f4ng tin \u0111\u1ea7y \u0111\u1ee7 + Related pipelines + Related documents\n- **Form \u2014 Nh\u1eadp ngu\u1ed3n \u0111\u1ea5t m\u1edbi**: T\u1ed1i \u01b0u mobile, c\u00f3 dropdowns, date picker, camera upload \u1ea3nh\n\n### PIPELINE_SALE Views\n- **Kanban/Deck view**: C\u1ed9t theo Stage, k\u00e9o th\u1ea3 \u0111\u1ec3 \u0111\u1ed5i stage\n- **Table view**: Filter theo Sale, Stage, Ng\u00e0y c\u1eadp nh\u1eadt\n- **Detail view**: L\u1ecbch s\u1eed c\u1eadp nh\u1eadt, n\u00fat \"Chuy\u1ec3n stage\" prominent\n\n### Dashboard (Manager/Gi\u00e1m \u0111\u1ed1c)\n- S\u1ed1 ngu\u1ed3n \u0111\u1ea5t theo Status (Pie chart)\n- Pipeline funnel (Bar chart theo Stage)\n- T\u1ed5ng gi\u00e1 tr\u1ecb deals \u0111ang \u0111\u00e0m ph\u00e1n (s\u1ed1 l\u1edbn hi\u1ec3n th\u1ecb n\u1ed5i b\u1eadt)\n- Top 5 sale theo s\u1ed1 deal / gi\u00e1 tr\u1ecb\n- C\u1ea3nh b\u00e1o thanh to\u00e1n tr\u1ec5 h\u1ea1n (Deck view \u0111\u1ecf)\n\n---\n\n## 8. VALIDATION RULES QUAN TR\u1eccNG\n\n| B\u1ea3ng | Column | Rule |\n|---|---|---|\n| NGUON_DAT | GiaBan_Ty | > 0 |\n| NGUON_DAT | DienTich_m2 | > 0 |\n| NGUON_DAT | Ngay_TiepNhan | <= TODAY() |\n| PIPELINE_SALE | LyDo_Rot | Required n\u1ebfu Stage = \"R\u1edbt\" |\n| PIPELINE_SALE | GiaDamPhan_Ty | <= GiaBan g\u1ed1c * 1.5 (c\u1ea3nh b\u00e1o n\u1ebfu v\u01b0\u1ee3t) |\n| THANH_TOAN | NgayThucNhan | >= NgayDuKien - 30 days |\n| THANH_TOAN | SoTien_Ty | > 0 |\n| GIAO_DICH | GiaTriHopDong_Ty | > 0 |\n\n---\n\n## 9. L\u01afU \u00dd KHI TRI\u1ec2N KHAI\n\n**B\u1eaft bu\u1ed9c l\u00e0m ngay t\u1eeb \u0111\u1ea7u:**\n1. T\u1ea1o b\u1ea3ng NHAN_SU tr\u01b0\u1edbc \u2014 \u0111\u00e2y l\u00e0 b\u1ea3ng lookup cho t\u1ea5t c\u1ea3 Ref nh\u00e2n s\u1ef1\n2. Thi\u1ebft l\u1eadp Security Filter t\u1eeb ng\u00e0y \u0111\u1ea7u, kh\u00f4ng \u0111\u1ec3 \"d\u1ecdn d\u1eb9p sau\" \u2014 r\u1ea5t kh\u00f3 fix retroactive\n3. D\u00f9ng App formula cho ID auto-increment ngay t\u1eeb \u0111\u1ea7u: `=\"ND-\" & TEXT(YEAR(TODAY()),\"0000\") & \"-\" & RIGHT(\"000\"&ROW(),3)`\n4. Kh\u00f4ng \u0111\u1ec3 tr\u1ed1ng Required columns \u2014 AppSheet s\u1ebd cho l\u01b0u nh\u01b0ng b\u00e1o c\u00e1o s\u1ebd b\u1ecb l\u1ed7i sau\n\n**R\u1ee7i ro c\u1ea7n tr\u00e1nh:**\n- \u0110\u1eebng d\u00f9ng Free text cho Status/Stage \u2014 ph\u1ea3i l\u00e0 Enum \u0111\u1ec3 filter/chart ho\u1ea1t \u0111\u1ed9ng\n- GPS LatLong: Sale ph\u1ea3i b\u1eadt location permission, h\u01b0\u1edbng d\u1eabn k\u1ef9 khi training\n- File/Image: C\u1ea7n Google Drive c\u00f3 \u0111\u1ee7 dung l\u01b0\u1ee3ng v\u00e0 c\u1ea5u tr\u00fac folder r\u00f5 r\u00e0ng\n- C\u00f4ng th\u1ee9c SUM trong GIAO_DICH: AppSheet t\u00ednh l\u1ea1i real-time, ch\u00fa \u00fd performance n\u1ebfu > 1000 rows\n\n**Th\u1ee9 t\u1ef1 build:**\n```\nTu\u1ea7n 1: CHU_DAT + NGUON_DAT + NHAN_SU + Security Filter c\u01a1 b\u1ea3n\nTu\u1ea7n 2: KHACH_HANG + PIPELINE_SALE + Views mobile\nTu\u1ea7n 3: GIAO_DICH + THANH_TOAN + Automation\nTu\u1ea7n 4: Dashboard + Training sale + Go-live\n```\n"}], "grading": {"eval_id": 2, "config": "with_skill", "assertions": [{"text": "3+ tables", "passed": true, "evidence": "Found 'nguon_dat'"}, {"text": "ref relationships", "passed": true, "evidence": "Found 'ref \u2192'"}, {"text": "key columns", "passed": true, "evidence": "Found 'key'"}, {"text": "status enum", "passed": true, "evidence": "Found 'enum'"}, {"text": "GPS/location", "passed": true, "evidence": "Found 'gps'"}]}}, {"id": "eval-2-appsheet-table-without_skill", "prompt": "Thi\u1ebft k\u1ebf to\u00e0n b\u1ed9 c\u1ea5u tr\u00fac database cho h\u1ec7 th\u1ed1ng AppSheet qu\u1ea3n l\u00fd ngu\u1ed3n \u0111\u1ea5t B\u0110S c\u00f4ng nghi\u1ec7p. H\u1ec7 th\u1ed1ng c\u1ea7n l\u01b0u th\u00f4ng tin ch\u1ee7 \u0111\u1ea5t, l\u00f4 \u0111\u1ea5t, v\u00e0 k\u1ebft n\u1ed1i v\u1edbi pipeline b\u00e1n h\u00e0ng.", "eval_id": 2, "outputs": [{"name": "response.md", "type": "text", "content": "# Thi\u1ebft K\u1ebf C\u1ea5u Tr\u00fac Database AppSheet - Qu\u1ea3n L\u00fd Ngu\u1ed3n \u0110\u1ea5t B\u0110S C\u00f4ng Nghi\u1ec7p\n\n## T\u1ed5ng Quan H\u1ec7 Th\u1ed1ng\n\nH\u1ec7 th\u1ed1ng qu\u1ea3n l\u00fd ngu\u1ed3n \u0111\u1ea5t B\u0110S c\u00f4ng nghi\u1ec7p tr\u00ean AppSheet bao g\u1ed3m c\u00e1c module ch\u00ednh:\n1. **Qu\u1ea3n l\u00fd Ch\u1ee7 \u0111\u1ea5t** (Land Owners)\n2. **Qu\u1ea3n l\u00fd L\u00f4 \u0111\u1ea5t** (Land Parcels)\n3. **Pipeline B\u00e1n h\u00e0ng** (Sales Pipeline)\n4. **Qu\u1ea3n l\u00fd Li\u00ean h\u1ec7 & T\u01b0\u01a1ng t\u00e1c** (Contacts & Activities)\n5. **Danh m\u1ee5c d\u00f9ng chung** (Reference Tables)\n\n---\n\n## 1. B\u1ea2NG CH\u1ee6 \u0110\u1ea4T (ChuDat)\n\n**M\u00f4 t\u1ea3:** L\u01b0u th\u00f4ng tin c\u00e1 nh\u00e2n/t\u1ed5 ch\u1ee9c s\u1edf h\u1eefu \u0111\u1ea5t\n\n| T\u00ean C\u1ed9t | Ki\u1ec3u D\u1eef Li\u1ec7u AppSheet | M\u00f4 t\u1ea3 | Ghi ch\u00fa |\n|---|---|---|---|\n| ChuDat_ID | Text (Key) | M\u00e3 ch\u1ee7 \u0111\u1ea5t (t\u1ef1 sinh) | VD: CD-2024-001 |\n| Ho_Ten | Name | H\u1ecd v\u00e0 t\u00ean ch\u1ee7 \u0111\u1ea5t | B\u1eaft bu\u1ed9c |\n| Loai_Chu_So_Huu | Enum | C\u00e1 nh\u00e2n / Doanh nghi\u1ec7p / H\u1ed9 gia \u0111\u00ecnh | Dropdown |\n| So_CCCD_CMND | Text | S\u1ed1 CCCD ho\u1eb7c CMND | D\u00e0nh cho c\u00e1 nh\u00e2n |\n| Ma_So_Thue_DN | Text | M\u00e3 s\u1ed1 thu\u1ebf doanh nghi\u1ec7p | D\u00e0nh cho DN |\n| Ten_Cong_Ty | Text | T\u00ean c\u00f4ng ty (n\u1ebfu l\u00e0 DN) | |\n| Nguoi_Dai_Dien | Name | Ng\u01b0\u1eddi \u0111\u1ea1i di\u1ec7n ph\u00e1p lu\u1eadt | D\u00e0nh cho DN |\n| So_Dien_Thoai_1 | Phone | S\u1ed1 \u0111i\u1ec7n tho\u1ea1i ch\u00ednh | B\u1eaft bu\u1ed9c |\n| So_Dien_Thoai_2 | Phone | S\u1ed1 \u0111i\u1ec7n tho\u1ea1i ph\u1ee5 | |\n| Email | Email | \u0110\u1ecba ch\u1ec9 email | |\n| Zalo | Text | S\u1ed1 Zalo | |\n| Dia_Chi_Thuong_Tru | LongText | \u0110\u1ecba ch\u1ec9 th\u01b0\u1eddng tr\u00fa | |\n| Tinh_Thanh_ChuDat | Ref \u2192 DanhMuc_TinhThanh | T\u1ec9nh/th\u00e0nh ph\u1ed1 | |\n| Nguon_Gioi_Thieu | Enum | T\u1ef1 li\u00ean h\u1ec7 / M\u00f4i gi\u1edbi / Gi\u1edbi thi\u1ec7u / Marketing | K\u00eanh ti\u1ebfp c\u1eadn |\n| Nhan_Vien_Phu_Trach | Ref \u2192 NhanVien | Nh\u00e2n vi\u00ean qu\u1ea3n l\u00fd | |\n| Muc_Do_Hop_Tac | Enum | T\u1ed1t / Trung b\u00ecnh / Kh\u00f3 / Ch\u01b0a x\u00e1c \u0111\u1ecbnh | \u0110\u00e1nh gi\u00e1 h\u1ee3p t\u00e1c |\n| Ghi_Chu | LongText | Ghi ch\u00fa th\u00eam v\u1ec1 ch\u1ee7 \u0111\u1ea5t | |\n| Trang_Thai | Enum | \u0110ang h\u1ee3p t\u00e1c / T\u1ea1m d\u1eebng / Kh\u00f4ng h\u1ee3p t\u00e1c | Tr\u1ea1ng th\u00e1i |\n| Ngay_Tao | DateTime | Ng\u00e0y t\u1ea1o h\u1ed3 s\u01a1 | Auto timestamp |\n| Ngay_Cap_Nhat | DateTime | Ng\u00e0y c\u1eadp nh\u1eadt cu\u1ed1i | Auto timestamp |\n| Nguoi_Tao | Ref \u2192 NhanVien | Ng\u01b0\u1eddi t\u1ea1o h\u1ed3 s\u01a1 | Auto: USEREMAIL() |\n| Hinh_Anh_CCCD | Image | \u1ea2nh CCCD/CMND | |\n| File_HopDong | File | File h\u1ee3p \u0111\u1ed3ng \u1ee7y quy\u1ec1n | |\n\n---\n\n## 2. B\u1ea2NG L\u00d4 \u0110\u1ea4T (LoDat)\n\n**M\u00f4 t\u1ea3:** L\u01b0u th\u00f4ng tin chi ti\u1ebft t\u1eebng l\u00f4 \u0111\u1ea5t/th\u1eeda \u0111\u1ea5t\n\n| T\u00ean C\u1ed9t | Ki\u1ec3u D\u1eef Li\u1ec7u AppSheet | M\u00f4 t\u1ea3 | Ghi ch\u00fa |\n|---|---|---|---|\n| LoDat_ID | Text (Key) | M\u00e3 l\u00f4 \u0111\u1ea5t (t\u1ef1 sinh) | VD: LD-2024-001 |\n| Ten_Lo_Dat | Text | T\u00ean/m\u00f4 t\u1ea3 l\u00f4 \u0111\u1ea5t | B\u1eaft bu\u1ed9c |\n| ChuDat_ID | Ref \u2192 ChuDat | Ch\u1ee7 s\u1edf h\u1eefu | B\u1eaft bu\u1ed9c |\n| Loai_Dat | Enum | \u0110\u1ea5t KCN / \u0110\u1ea5t kho x\u01b0\u1edfng / \u0110\u1ea5t th\u1ed5 c\u01b0 / \u0110\u1ea5t n\u00f4ng nghi\u1ec7p chuy\u1ec3n \u0111\u1ed5i | |\n| Ma_Thua | Text | M\u00e3 th\u1eeda \u0111\u1ea5t | Theo s\u1ed5 \u0111\u1ecf |\n| Ma_To_Ban_Do | Text | M\u00e3 t\u1edd b\u1ea3n \u0111\u1ed3 | |\n| So_GCN | Text | S\u1ed1 gi\u1ea5y ch\u1ee9ng nh\u1eadn quy\u1ec1n s\u1eed d\u1ee5ng \u0111\u1ea5t | |\n| Dien_Tich_Tong | Decimal | T\u1ed5ng di\u1ec7n t\u00edch (m\u00b2) | |\n| Dien_Tich_Co_The_Xay | Decimal | Di\u1ec7n t\u00edch c\u00f3 th\u1ec3 x\u00e2y d\u1ef1ng (m\u00b2) | |\n| Mat_Tien | Decimal | Chi\u1ec1u r\u1ed9ng m\u1eb7t ti\u1ec1n (m) | |\n| Chieu_Sau | Decimal | Chi\u1ec1u s\u00e2u l\u00f4 \u0111\u1ea5t (m) | |\n| Tinh_Thanh | Ref \u2192 DanhMuc_TinhThanh | T\u1ec9nh/Th\u00e0nh ph\u1ed1 | B\u1eaft bu\u1ed9c |\n| Quan_Huyen | Text | Qu\u1eadn/Huy\u1ec7n | |\n| Xa_Phuong | Text | X\u00e3/Ph\u01b0\u1eddng | |\n| Dia_Chi_Cu_The | LongText | \u0110\u1ecba ch\u1ec9 chi ti\u1ebft | |\n| Vi_Do | Decimal | V\u0129 \u0111\u1ed9 GPS | |\n| Kinh_Do | Decimal | Kinh \u0111\u1ed9 GPS | |\n| Vi_Tri_Google_Maps | Text | Link Google Maps | |\n| KCN_Gan_Nhat | Text | Khu c\u00f4ng nghi\u1ec7p g\u1ea7n nh\u1ea5t | |\n| Khoang_Cach_KCN | Decimal | Kho\u1ea3ng c\u00e1ch \u0111\u1ebfn KCN g\u1ea7n nh\u1ea5t (km) | |\n| Duong_Vao | Enum | \u0110\u01b0\u1eddng nh\u1ef1a / \u0110\u01b0\u1eddng \u0111\u1ea5t / \u0110\u01b0\u1eddng b\u00ea t\u00f4ng | |\n| Rong_Duong | Decimal | R\u1ed9ng \u0111\u01b0\u1eddng v\u00e0o (m) | |\n| Quy_Hoach | Enum | \u0110\u1ea5t KCN / \u0110\u1ea5t c\u00f4ng nghi\u1ec7p / \u0110\u1ea5t \u1edf / \u0110\u1ea5t n\u00f4ng nghi\u1ec7p / Ch\u01b0a quy ho\u1ea1ch | |\n| Trang_Thai_Phap_Ly | Enum | S\u1ed5 \u0111\u1ecf / S\u1ed5 h\u1ed3ng / \u0110ang l\u00e0m s\u1ed5 / Kh\u00f4ng c\u00f3 s\u1ed5 | |\n| Tinh_Trang_Hien_Tai | Enum | \u0110\u1ea5t tr\u1ed1ng / C\u00f3 c\u00f4ng tr\u00ecnh / \u0110ang thu\u00ea / \u0110ang s\u1eed d\u1ee5ng | |\n| Gia_Mong_Muon | Currency | Gi\u00e1 ch\u1ee7 \u0111\u1ea5t y\u00eau c\u1ea7u (VN\u0110) | |\n| Gia_Tham_Khao | Currency | Gi\u00e1 th\u1ecb tr\u01b0\u1eddng tham kh\u1ea3o (VN\u0110) | |\n| Don_Gia_M2 | Currency | \u0110\u01a1n gi\u00e1/m\u00b2 (VN\u0110) | T\u00ednh t\u1ef1 \u0111\u1ed9ng |\n| Hinh_Thuc_Giao_Dich | EnumList | B\u00e1n / Cho thu\u00ea / H\u1ee3p t\u00e1c \u0111\u1ea7u t\u01b0 | Multi-select |\n| Thoi_Gian_Co_The_Ban | Date | Th\u1eddi \u0111i\u1ec3m s\u1eb5n s\u00e0ng giao d\u1ecbch | |\n| Trang_Thai_Lo_Dat | Enum | \u0110ang t\u00ecm ki\u1ebfm kh\u00e1ch / \u0110ang \u0111\u00e0m ph\u00e1n / \u0110\u00e3 c\u00f3 kh\u00e1ch / \u0110\u00e3 giao d\u1ecbch / T\u1ea1m d\u1eebng | |\n| Nhan_Vien_Phu_Trach | Ref \u2192 NhanVien | Nh\u00e2n vi\u00ean qu\u1ea3n l\u00fd l\u00f4 \u0111\u1ea5t | |\n| Tien_Ich_Xung_Quanh | EnumList | \u0110i\u1ec7n / N\u01b0\u1edbc / Internet / C\u1ed1ng tho\u00e1t n\u01b0\u1edbc / \u0110\u01b0\u1eddng s\u1eaft / C\u1ea3ng | |\n| Mo_Ta_Chi_Tiet | LongText | M\u00f4 t\u1ea3 chi ti\u1ebft l\u00f4 \u0111\u1ea5t | |\n| Diem_Manh | LongText | \u0110i\u1ec3m m\u1ea1nh c\u1ee7a l\u00f4 \u0111\u1ea5t | |\n| Diem_Yeu | LongText | \u0110i\u1ec3m y\u1ebfu/h\u1ea1n ch\u1ebf | |\n| Hinh_Anh_1 | Image | H\u00ecnh \u1ea3nh l\u00f4 \u0111\u1ea5t 1 | |\n| Hinh_Anh_2 | Image | H\u00ecnh \u1ea3nh l\u00f4 \u0111\u1ea5t 2 | |\n| Hinh_Anh_3 | Image | H\u00ecnh \u1ea3nh l\u00f4 \u0111\u1ea5t 3 | |\n| Thu_Muc_Anh | File | Th\u01b0 m\u1ee5c ch\u1ee9a \u1ea3nh (Google Drive link) | |\n| File_So_Do | File | File s\u01a1 \u0111\u1ed3/b\u1ea3n v\u1ebd | |\n| File_GCN | File | File gi\u1ea5y ch\u1ee9ng nh\u1eadn | |\n| Ngay_Tiep_Nhan | Date | Ng\u00e0y ti\u1ebfp nh\u1eadn th\u00f4ng tin | |\n| Ngay_Tao | DateTime | Ng\u00e0y t\u1ea1o | Auto |\n| Ngay_Cap_Nhat | DateTime | Ng\u00e0y c\u1eadp nh\u1eadt | Auto |\n| Nguoi_Tao | Ref \u2192 NhanVien | Ng\u01b0\u1eddi t\u1ea1o | Auto |\n\n---\n\n## 3. B\u1ea2NG KH\u00c1CH H\u00c0NG TI\u1ec0M N\u0102NG (KhachHang)\n\n**M\u00f4 t\u1ea3:** L\u01b0u th\u00f4ng tin kh\u00e1ch h\u00e0ng/nh\u00e0 \u0111\u1ea7u t\u01b0 quan t\u00e2m\n\n| T\u00ean C\u1ed9t | Ki\u1ec3u D\u1eef Li\u1ec7u AppSheet | M\u00f4 t\u1ea3 | Ghi ch\u00fa |\n|---|---|---|---|\n| KhachHang_ID | Text (Key) | M\u00e3 kh\u00e1ch h\u00e0ng | VD: KH-2024-001 |\n| Ten_Cong_Ty | Text | T\u00ean c\u00f4ng ty/t\u1ed5 ch\u1ee9c | |\n| Nguoi_Lien_He | Name | Ng\u01b0\u1eddi li\u00ean h\u1ec7 ch\u00ednh | B\u1eaft bu\u1ed9c |\n| Chuc_Vu | Text | Ch\u1ee9c v\u1ee5 ng\u01b0\u1eddi li\u00ean h\u1ec7 | |\n| So_Dien_Thoai | Phone | S\u1ed1 \u0111i\u1ec7n tho\u1ea1i | B\u1eaft bu\u1ed9c |\n| Email | Email | \u0110\u1ecba ch\u1ec9 email | |\n| Quoc_Tich | Text | Qu\u1ed1c t\u1ecbch nh\u00e0 \u0111\u1ea7u t\u01b0 | |\n| Linh_Vuc_SX | Text | L\u0129nh v\u1ef1c s\u1ea3n xu\u1ea5t/kinh doanh | |\n| Nhu_Cau | LongText | Nhu c\u1ea7u c\u1ee5 th\u1ec3 | |\n| Dien_Tich_Can | Decimal | Di\u1ec7n t\u00edch c\u1ea7n t\u00ecm (m\u00b2) t\u1eeb | |\n| Dien_Tich_Den | Decimal | Di\u1ec7n t\u00edch c\u1ea7n t\u00ecm (m\u00b2) \u0111\u1ebfn | |\n| Ngan_Sach_Tu | Currency | Ng\u00e2n s\u00e1ch t\u1ed1i thi\u1ec3u | |\n| Ngan_Sach_Den | Currency | Ng\u00e2n s\u00e1ch t\u1ed1i \u0111a | |\n| Tinh_Thanh_Can | EnumList | T\u1ec9nh/th\u00e0nh ph\u1ed1 quan t\u00e2m | Multi-select |\n| Hinh_Thuc_Can | EnumList | Mua / Thu\u00ea / H\u1ee3p t\u00e1c | |\n| Muc_Do_Uu_Tien | Enum | Hot / Warm / Cold | Ph\u00e2n lo\u1ea1i |\n| Nguon_Khach | Enum | Website / Facebook / Zalo / Gi\u1edbi thi\u1ec7u / H\u1ed9i th\u1ea3o / Kh\u00e1c | |\n| Nhan_Vien_Phu_Trach | Ref \u2192 NhanVien | Nh\u00e2n vi\u00ean ph\u1ee5 tr\u00e1ch | |\n| Trang_Thai | Enum | M\u1edbi / \u0110ang t\u01b0 v\u1ea5n / \u0110ang \u0111\u00e0m ph\u00e1n / \u0110\u00e3 ch\u1ed1t / Kh\u00f4ng th\u00e0nh | |\n| Ghi_Chu | LongText | Ghi ch\u00fa | |\n| Ngay_Tao | DateTime | Ng\u00e0y t\u1ea1o | Auto |\n| Ngay_Cap_Nhat | DateTime | Ng\u00e0y c\u1eadp nh\u1eadt | Auto |\n\n---\n\n## 4. B\u1ea2NG PIPELINE B\u00c1N H\u00c0NG (Pipeline)\n\n**M\u00f4 t\u1ea3:** Theo d\u00f5i ti\u1ebfn tr\u00ecnh giao d\u1ecbch t\u1eebng c\u01a1 h\u1ed9i b\u00e1n h\u00e0ng\n\n| T\u00ean C\u1ed9t | Ki\u1ec3u D\u1eef Li\u1ec7u AppSheet | M\u00f4 t\u1ea3 | Ghi ch\u00fa |\n|---|---|---|---|\n| Pipeline_ID | Text (Key) | M\u00e3 pipeline | VD: PL-2024-001 |\n| LoDat_ID | Ref \u2192 LoDat | L\u00f4 \u0111\u1ea5t li\u00ean quan | B\u1eaft bu\u1ed9c |\n| KhachHang_ID | Ref \u2192 KhachHang | Kh\u00e1ch h\u00e0ng | B\u1eaft bu\u1ed9c |\n| Ten_Co_Hoi | Text | T\u00ean c\u01a1 h\u1ed9i b\u00e1n h\u00e0ng | |\n| Giai_Doan | Enum | Ti\u1ebfp c\u1eadn / Gi\u1edbi thi\u1ec7u / Kh\u1ea3o s\u00e1t th\u1ef1c \u0111\u1ecba / \u0110\u00e0m ph\u00e1n / K\u00fd H\u0110 \u0111\u1eb7t c\u1ecdc / K\u00fd H\u0110 ch\u00ednh th\u1ee9c / Ho\u00e0n t\u1ea5t | |\n| So_Tien_Du_Kien | Currency | Gi\u00e1 tr\u1ecb giao d\u1ecbch d\u1ef1 ki\u1ebfn | |\n| So_Tien_Thuc_Te | Currency | Gi\u00e1 tr\u1ecb giao d\u1ecbch th\u1ef1c t\u1ebf | |\n| Phan_Tram_Hoa_Hong | Decimal | % hoa h\u1ed3ng | |\n| So_Tien_Hoa_Hong | Currency | S\u1ed1 ti\u1ec1n hoa h\u1ed3ng (t\u00ednh t\u1ef1 \u0111\u1ed9ng) | |\n| Xac_Suat_Thanh_Cong | Percent | X\u00e1c su\u1ea5t th\u00e0nh c\u00f4ng (%) | |\n| Ngay_Bat_Dau | Date | Ng\u00e0y b\u1eaft \u0111\u1ea7u pipeline | |\n| Ngay_Muc_Tieu | Date | Ng\u00e0y m\u1ee5c ti\u00eau ho\u00e0n th\u00e0nh | |\n| Ngay_Hoan_Thanh | Date | Ng\u00e0y ho\u00e0n th\u00e0nh th\u1ef1c t\u1ebf | |\n| Nguyen_Nhan_That_Bai | LongText | L\u00fd do th\u1ea5t b\u1ea1i (n\u1ebfu c\u00f3) | |\n| Nhan_Vien_Kinh_Doanh | Ref \u2192 NhanVien | Nh\u00e2n vi\u00ean kinh doanh | |\n| Truong_Nhom | Ref \u2192 NhanVien | Tr\u01b0\u1edfng nh\u00f3m ph\u1ee5 tr\u00e1ch | |\n| Trang_Thai | Enum | \u0110ang th\u1ef1c hi\u1ec7n / Th\u00e0nh c\u00f4ng / Th\u1ea5t b\u1ea1i / T\u1ea1m ho\u00e3n | |\n| Ghi_Chu | LongText | Ghi ch\u00fa | |\n| Ngay_Tao | DateTime | Ng\u00e0y t\u1ea1o | Auto |\n| Ngay_Cap_Nhat | DateTime | Ng\u00e0y c\u1eadp nh\u1eadt | Auto |\n\n---\n\n## 5. B\u1ea2NG L\u1ecaCH S\u1eec T\u01af\u01a0NG T\u00c1C (LichSuTuongTac)\n\n**M\u00f4 t\u1ea3:** Ghi l\u1ea1i m\u1ecdi ho\u1ea1t \u0111\u1ed9ng t\u01b0\u01a1ng t\u00e1c v\u1edbi ch\u1ee7 \u0111\u1ea5t v\u00e0 kh\u00e1ch h\u00e0ng\n\n| T\u00ean C\u1ed9t | Ki\u1ec3u D\u1eef Li\u1ec7u AppSheet | M\u00f4 t\u1ea3 | Ghi ch\u00fa |\n|---|---|---|---|\n| TuongTac_ID | Text (Key) | M\u00e3 t\u01b0\u01a1ng t\u00e1c | Auto |\n| Loai_Doi_Tuong | Enum | Ch\u1ee7 \u0111\u1ea5t / Kh\u00e1ch h\u00e0ng | |\n| ChuDat_ID | Ref \u2192 ChuDat | Li\u00ean k\u1ebft ch\u1ee7 \u0111\u1ea5t | \u0110i\u1ec1u ki\u1ec7n theo lo\u1ea1i |\n| KhachHang_ID | Ref \u2192 KhachHang | Li\u00ean k\u1ebft kh\u00e1ch h\u00e0ng | \u0110i\u1ec1u ki\u1ec7n theo lo\u1ea1i |\n| Pipeline_ID | Ref \u2192 Pipeline | Li\u00ean k\u1ebft pipeline | |\n| Loai_Tuong_Tac | Enum | G\u1ecdi \u0111i\u1ec7n / Nh\u1eafn tin Zalo / Email / G\u1eb7p m\u1eb7t / Kh\u1ea3o s\u00e1t th\u1ef1c \u0111\u1ecba / H\u1ed9i th\u1ea3o | |\n| Ngay_Gio_TuongTac | DateTime | Th\u1eddi \u0111i\u1ec3m t\u01b0\u01a1ng t\u00e1c | B\u1eaft bu\u1ed9c |\n| Noi_Dung | LongText | N\u1ed9i dung trao \u0111\u1ed5i | |\n| Ket_Qua | Enum | T\u00edch c\u1ef1c / Trung l\u1eadp / Ti\u00eau c\u1ef1c / C\u1ea7n theo d\u00f5i th\u00eam | |\n| Buoc_Tiep_Theo | LongText | H\u00e0nh \u0111\u1ed9ng ti\u1ebfp theo c\u1ea7n l\u00e0m | |\n| Ngay_Hen_Tiep | Date | Ng\u00e0y h\u1eb9n t\u01b0\u01a1ng t\u00e1c ti\u1ebfp theo | |\n| Nhan_Vien | Ref \u2192 NhanVien | Nh\u00e2n vi\u00ean th\u1ef1c hi\u1ec7n | Auto |\n| File_Dinh_Kem | File | File \u0111\u00ednh k\u00e8m | |\n| Ngay_Tao | DateTime | Ng\u00e0y t\u1ea1o | Auto |\n\n---\n\n## 6. B\u1ea2NG GHI CH\u00da C\u00d4NG VI\u1ec6C / TASK (CongViec)\n\n**M\u00f4 t\u1ea3:** Qu\u1ea3n l\u00fd c\u00f4ng vi\u1ec7c v\u00e0 nh\u1eafc nh\u1edf\n\n| T\u00ean C\u1ed9t | Ki\u1ec3u D\u1eef Li\u1ec7u AppSheet | M\u00f4 t\u1ea3 | Ghi ch\u00fa |\n|---|---|---|---|\n| CongViec_ID | Text (Key) | M\u00e3 c\u00f4ng vi\u1ec7c | Auto |\n| Tieu_De | Text | Ti\u00eau \u0111\u1ec1 c\u00f4ng vi\u1ec7c | B\u1eaft bu\u1ed9c |\n| Mo_Ta | LongText | M\u00f4 t\u1ea3 chi ti\u1ebft | |\n| Loai_CongViec | Enum | G\u1ecdi \u0111i\u1ec7n / G\u1eb7p m\u1eb7t / Kh\u1ea3o s\u00e1t / Chu\u1ea9n b\u1ecb t\u00e0i li\u1ec7u / Theo d\u00f5i h\u1ed3 s\u01a1 / Kh\u00e1c | |\n| Doi_Tuong_Lien_Quan | Enum | Ch\u1ee7 \u0111\u1ea5t / Kh\u00e1ch h\u00e0ng / L\u00f4 \u0111\u1ea5t / Pipeline | |\n| ChuDat_ID | Ref \u2192 ChuDat | Li\u00ean k\u1ebft ch\u1ee7 \u0111\u1ea5t | |\n| KhachHang_ID | Ref \u2192 KhachHang | Li\u00ean k\u1ebft kh\u00e1ch h\u00e0ng | |\n| LoDat_ID | Ref \u2192 LoDat | Li\u00ean k\u1ebft l\u00f4 \u0111\u1ea5t | |\n| Pipeline_ID | Ref \u2192 Pipeline | Li\u00ean k\u1ebft pipeline | |\n| Nguoi_Thuc_Hien | Ref \u2192 NhanVien | Ng\u01b0\u1eddi \u0111\u01b0\u1ee3c giao vi\u1ec7c | |\n| Nguoi_Giao | Ref \u2192 NhanVien | Ng\u01b0\u1eddi giao vi\u1ec7c | Auto |\n| Han_Hoan_Thanh | DateTime | H\u1ea1n ho\u00e0n th\u00e0nh | |\n| Muc_Do_Uu_Tien | Enum | Kh\u1ea9n c\u1ea5p / Cao / Trung b\u00ecnh / Th\u1ea5p | |\n| Trang_Thai | Enum | Ch\u01b0a b\u1eaft \u0111\u1ea7u / \u0110ang th\u1ef1c hi\u1ec7n / Ho\u00e0n th\u00e0nh / H\u1ee7y | |\n| Ghi_Chu | LongText | Ghi ch\u00fa | |\n| Ngay_Tao | DateTime | Ng\u00e0y t\u1ea1o | Auto |\n| Ngay_Hoan_Thanh_TT | DateTime | Ng\u00e0y ho\u00e0n th\u00e0nh th\u1ef1c t\u1ebf | |\n\n---\n\n## 7. B\u1ea2NG NH\u00c2N VI\u00caN (NhanVien)\n\n**M\u00f4 t\u1ea3:** Th\u00f4ng tin nh\u00e2n vi\u00ean s\u1eed d\u1ee5ng h\u1ec7 th\u1ed1ng\n\n| T\u00ean C\u1ed9t | Ki\u1ec3u D\u1eef Li\u1ec7u AppSheet | M\u00f4 t\u1ea3 | Ghi ch\u00fa |\n|---|---|---|---|\n| NhanVien_ID | Text (Key) | M\u00e3 nh\u00e2n vi\u00ean | |\n| Ho_Ten | Name | H\u1ecd v\u00e0 t\u00ean | B\u1eaft bu\u1ed9c |\n| Email | Email | Email \u0111\u0103ng nh\u1eadp AppSheet | B\u1eaft bu\u1ed9c, unique |\n| So_Dien_Thoai | Phone | S\u1ed1 \u0111i\u1ec7n tho\u1ea1i | |\n| Chuc_Vu | Enum | Gi\u00e1m \u0111\u1ed1c / Tr\u01b0\u1edfng ph\u00f2ng / Nh\u00e2n vi\u00ean KD / Nh\u00e2n vi\u00ean h\u1ed7 tr\u1ee3 | |\n| Phong_Ban | Text | Ph\u00f2ng ban | |\n| Vung_Phu_Trach | EnumList | Danh s\u00e1ch t\u1ec9nh ph\u1ee5 tr\u00e1ch | |\n| Truong_Nhom | Ref \u2192 NhanVien | Tr\u01b0\u1edfng nh\u00f3m qu\u1ea3n l\u00fd | |\n| Role | Enum | Admin / Manager / Sales / Viewer | Ph\u00e2n quy\u1ec1n |\n| Trang_Thai | Enum | \u0110ang l\u00e0m vi\u1ec7c / Ngh\u1ec9 ph\u00e9p / \u0110\u00e3 ngh\u1ec9 vi\u1ec7c | |\n| Ngay_Bat_Dau | Date | Ng\u00e0y b\u1eaft \u0111\u1ea7u l\u00e0m vi\u1ec7c | |\n| Avatar | Image | \u1ea2nh \u0111\u1ea1i di\u1ec7n | |\n\n---\n\n## 8. B\u1ea2NG DANH M\u1ee4C T\u1ec8NH TH\u00c0NH (DanhMuc_TinhThanh)\n\n| T\u00ean C\u1ed9t | Ki\u1ec3u D\u1eef Li\u1ec7u AppSheet | M\u00f4 t\u1ea3 |\n|---|---|---|\n| TinhThanh_ID | Text (Key) | M\u00e3 t\u1ec9nh/th\u00e0nh |\n| Ten_TinhThanh | Text | T\u00ean t\u1ec9nh/th\u00e0nh |\n| Vung_Kinh_Te | Enum | Mi\u1ec1n B\u1eafc / Mi\u1ec1n Trung / Mi\u1ec1n Nam / T\u00e2y Nguy\u00ean |\n| Co_KCN | Yes/No | C\u00f3 khu c\u00f4ng nghi\u1ec7p kh\u00f4ng |\n| So_KCN | Number | S\u1ed1 l\u01b0\u1ee3ng KCN trong t\u1ec9nh |\n\n---\n\n## 9. B\u1ea2NG KHU C\u00d4NG NGHI\u1ec6P (KhuCongNghiep)\n\n**M\u00f4 t\u1ea3:** Th\u00f4ng tin c\u00e1c KCN tham chi\u1ebfu\n\n| T\u00ean C\u1ed9t | Ki\u1ec3u D\u1eef Li\u1ec7u AppSheet | M\u00f4 t\u1ea3 | Ghi ch\u00fa |\n|---|---|---|---|\n| KCN_ID | Text (Key) | M\u00e3 KCN | |\n| Ten_KCN | Text | T\u00ean khu c\u00f4ng nghi\u1ec7p | |\n| Tinh_Thanh | Ref \u2192 DanhMuc_TinhThanh | T\u1ec9nh/th\u00e0nh | |\n| Dien_Tich_KCN | Decimal | T\u1ed5ng di\u1ec7n t\u00edch (ha) | |\n| Ti_Le_Lap_Day | Percent | T\u1ef7 l\u1ec7 l\u1ea5p \u0111\u1ea7y (%) | |\n| Don_Vi_Quan_Ly | Text | \u0110\u01a1n v\u1ecb qu\u1ea3n l\u00fd | |\n| Nam_Thanh_Lap | Number | N\u0103m th\u00e0nh l\u1eadp | |\n| Nganh_Nghe_UuTien | LongText | Ng\u00e0nh ngh\u1ec1 \u01b0u ti\u00ean | |\n| Gia_Thue_Dat | Currency | Gi\u00e1 thu\u00ea \u0111\u1ea5t (USD/m\u00b2/k\u1ef3) | |\n| Vi_Do | Decimal | V\u0129 \u0111\u1ed9 | |\n| Kinh_Do | Decimal | Kinh \u0111\u1ed9 | |\n| Trang_Thai | Enum | \u0110ang ho\u1ea1t \u0111\u1ed9ng / Quy ho\u1ea1ch / \u0110ang x\u00e2y d\u1ef1ng | |\n| Ghi_Chu | LongText | Ghi ch\u00fa | |\n\n---\n\n## 10. B\u1ea2NG B\u00c1O C\u00c1O \u0110\u1ecaNH GI\u00c1 (DinhGia)\n\n**M\u00f4 t\u1ea3:** L\u01b0u l\u1ecbch s\u1eed \u0111\u1ecbnh gi\u00e1 cho t\u1eebng l\u00f4 \u0111\u1ea5t\n\n| T\u00ean C\u1ed9t | Ki\u1ec3u D\u1eef Li\u1ec7u AppSheet | M\u00f4 t\u1ea3 | Ghi ch\u00fa |\n|---|---|---|---|\n| DinhGia_ID | Text (Key) | M\u00e3 \u0111\u1ecbnh gi\u00e1 | |\n| LoDat_ID | Ref \u2192 LoDat | L\u00f4 \u0111\u1ea5t | B\u1eaft bu\u1ed9c |\n| Ngay_DinhGia | Date | Ng\u00e0y \u0111\u1ecbnh gi\u00e1 | |\n| Nguoi_DinhGia | Ref \u2192 NhanVien | Ng\u01b0\u1eddi \u0111\u1ecbnh gi\u00e1 | |\n| Gia_DinhGia_Thap | Currency | Gi\u00e1 \u0111\u1ecbnh gi\u00e1 th\u1ea5p nh\u1ea5t | |\n| Gia_DinhGia_TB | Currency | Gi\u00e1 \u0111\u1ecbnh gi\u00e1 trung b\u00ecnh | |\n| Gia_DinhGia_Cao | Currency | Gi\u00e1 \u0111\u1ecbnh gi\u00e1 cao nh\u1ea5t | |\n| Phuong_Phap | Enum | So s\u00e1nh th\u1ecb tr\u01b0\u1eddng / Thu nh\u1eadp / Chi ph\u00ed / K\u1ebft h\u1ee3p | |\n| Tai_San_So_Sanh | LongText | T\u00e0i s\u1ea3n so s\u00e1nh tham chi\u1ebfu | |\n| Nhan_Xet | LongText | Nh\u1eadn x\u00e9t \u0111\u1ecbnh gi\u00e1 | |\n| File_BaoCao | File | File b\u00e1o c\u00e1o \u0111\u1ecbnh gi\u00e1 | |\n\n---\n\n## S\u01a1 \u0110\u1ed3 Quan H\u1ec7 (ERD Summary)\n\n```\nNhanVien (1) \u2190\u2014\u2014\u2192 (N) ChuDat\nNhanVien (1) \u2190\u2014\u2014\u2192 (N) LoDat\nNhanVien (1) \u2190\u2014\u2014\u2192 (N) KhachHang\nNhanVien (1) \u2190\u2014\u2014\u2192 (N) Pipeline\nNhanVien (1) \u2190\u2014\u2014\u2192 (N) CongViec\nNhanVien (1) \u2190\u2014\u2014\u2192 (N) LichSuTuongTac\n\nChuDat (1) \u2190\u2014\u2014\u2192 (N) LoDat\nChuDat (1) \u2190\u2014\u2014\u2192 (N) LichSuTuongTac\n\nLoDat (1) \u2190\u2014\u2014\u2192 (N) Pipeline\nLoDat (1) \u2190\u2014\u2014\u2192 (N) DinhGia\n\nKhachHang (1) \u2190\u2014\u2014\u2192 (N) Pipeline\nKhachHang (1) \u2190\u2014\u2014\u2192 (N) LichSuTuongTac\n\nPipeline (1) \u2190\u2014\u2014\u2192 (N) LichSuTuongTac\nPipeline (1) \u2190\u2014\u2014\u2192 (N) CongViec\n\nDanhMuc_TinhThanh (1) \u2190\u2014\u2014\u2192 (N) ChuDat\nDanhMuc_TinhThanh (1) \u2190\u2014\u2014\u2192 (N) LoDat\nDanhMuc_TinhThanh (1) \u2190\u2014\u2014\u2192 (N) KCN\n\nKCN (1) \u2190\u2014\u2014\u2192 (N) LoDat [tham chi\u1ebfu g\u1ea7n nh\u1ea5t]\n```\n\n---\n\n## C\u1ea5u H\u00ecnh AppSheet \u0110\u1ec1 Xu\u1ea5t\n\n### Views (M\u00e0n h\u00ecnh hi\u1ec3n th\u1ecb)\n\n| View | Lo\u1ea1i | B\u1ea3ng | M\u00f4 t\u1ea3 |\n|---|---|---|---|\n| Dashboard | Dashboard | T\u1ed5ng h\u1ee3p | T\u1ed5ng quan KPI |\n| Danh s\u00e1ch L\u00f4 \u0111\u1ea5t | Gallery / Deck | LoDat | Hi\u1ec3n th\u1ecb d\u1ea1ng card |\n| B\u1ea3n \u0111\u1ed3 L\u00f4 \u0111\u1ea5t | Map | LoDat | Hi\u1ec3n th\u1ecb v\u1ecb tr\u00ed GPS |\n| Chi ti\u1ebft L\u00f4 \u0111\u1ea5t | Detail | LoDat | Th\u00f4ng tin \u0111\u1ea7y \u0111\u1ee7 |\n| Danh s\u00e1ch Ch\u1ee7 \u0111\u1ea5t | Table | ChuDat | Danh s\u00e1ch d\u1ea1ng b\u1ea3ng |\n| Pipeline Kanban | Kanban | Pipeline | Theo d\u00f5i giai \u0111o\u1ea1n |\n| L\u1ecbch c\u00f4ng vi\u1ec7c | Calendar | CongViec | Nh\u1eafc nh\u1edf theo ng\u00e0y |\n| Kh\u00e1ch h\u00e0ng | Table | KhachHang | Qu\u1ea3n l\u00fd CRM |\n| B\u00e1o c\u00e1o | Chart | T\u1ed5ng h\u1ee3p | Bi\u1ec3u \u0111\u1ed3 th\u1ed1ng k\u00ea |\n\n### Automations (T\u1ef1 \u0111\u1ed9ng h\u00f3a)\n\n1. **Nh\u1eafc nh\u1edf c\u00f4ng vi\u1ec7c:** G\u1eedi email/notification khi \u0111\u1ebfn h\u1ea1n CongViec\n2. **C\u1eadp nh\u1eadt tr\u1ea1ng th\u00e1i l\u00f4 \u0111\u1ea5t:** T\u1ef1 \u0111\u1ed9ng c\u1eadp nh\u1eadt Trang_Thai_Lo_Dat khi Pipeline thay \u0111\u1ed5i\n3. **Th\u00f4ng b\u00e1o pipeline m\u1edbi:** Notify tr\u01b0\u1edfng nh\u00f3m khi c\u00f3 pipeline m\u1edbi \u0111\u01b0\u1ee3c t\u1ea1o\n4. **B\u00e1o c\u00e1o tu\u1ea7n:** T\u1ef1 \u0111\u1ed9ng g\u1eedi b\u00e1o c\u00e1o t\u1ed5ng h\u1ee3p m\u1ed7i th\u1ee9 6\n5. **Nh\u1eafc h\u1ea1n follow-up:** G\u1eedi nh\u1eafc khi \u0111\u1ebfn ng\u00e0y Ngay_Hen_Tiep trong LichSuTuongTac\n\n### Security Filters (Ph\u00e2n quy\u1ec1n d\u1eef li\u1ec7u)\n\n| Role | Quy\u1ec1n truy c\u1eadp |\n|---|---|\n| Admin | To\u00e0n quy\u1ec1n t\u1ea5t c\u1ea3 d\u1eef li\u1ec7u |\n| Manager | Xem t\u1ea5t c\u1ea3, s\u1eeda trong ph\u1ea1m vi v\u00f9ng |\n| Sales | Ch\u1ec9 xem v\u00e0 s\u1eeda d\u1eef li\u1ec7u do m\u00ecnh ph\u1ee5 tr\u00e1ch |\n| Viewer | Ch\u1ec9 xem, kh\u00f4ng s\u1eeda |\n\n**Security Filter cho Sales:**\n```\n[Nhan_Vien_Phu_Trach] = USEREMAIL()\n```\n\n---\n\n## Computed Columns (C\u1ed9t T\u00ednh To\u00e1n)\n\n| B\u1ea3ng | C\u1ed9t | C\u00f4ng th\u1ee9c AppSheet |\n|---|---|---|\n| LoDat | Don_Gia_M2 | [Gia_Mong_Muon] / [Dien_Tich_Tong] |\n| Pipeline | So_Tien_Hoa_Hong | [So_Tien_Thuc_Te] * [Phan_Tram_Hoa_Hong] / 100 |\n| Pipeline | So_Ngay_Mo | TODAY() - [Ngay_Bat_Dau] |\n| ChuDat | So_Lo_Dat | COUNT(LoDat[ChuDat_ID] = [ChuDat_ID]) |\n| KhachHang | So_Pipeline | COUNT(Pipeline[KhachHang_ID] = [KhachHang_ID]) |\n\n---\n\n## L\u01b0u \u00dd Tri\u1ec3n Khai\n\n1. **Google Sheets l\u00e0m backend:** M\u1ed7i b\u1ea3ng l\u00e0 m\u1ed9t sheet trong c\u00f9ng m\u1ed9t Google Spreadsheet ho\u1eb7c nhi\u1ec1u file ri\u00eang t\u00f9y quy m\u00f4.\n2. **ID Generation:** S\u1eed d\u1ee5ng UNIQUEID() ho\u1eb7c c\u00f4ng th\u1ee9c gh\u00e9p ng\u00e0y th\u00e1ng + s\u1ed1 th\u1ee9 t\u1ef1 \u0111\u1ec3 t\u1ea1o m\u00e3 t\u1ef1 \u0111\u1ed9ng.\n3. **Image/File Storage:** S\u1eed d\u1ee5ng Google Drive l\u00e0m n\u01a1i l\u01b0u \u1ea3nh v\u00e0 file, AppSheet t\u1ef1 \u0111\u1ed9ng link.\n4. **Offline Mode:** B\u1eadt ch\u1ebf \u0111\u1ed9 offline cho nh\u00e2n vi\u00ean l\u00e0m vi\u1ec7c th\u1ef1c \u0111\u1ecba.\n5. **Performance:** Gi\u1edbi h\u1ea1n m\u1ed7i sheet kho\u1ea3ng 5,000-10,000 d\u00f2ng \u0111\u1ec3 AppSheet ho\u1ea1t \u0111\u1ed9ng m\u01b0\u1ee3t m\u00e0; n\u1ebfu d\u1eef li\u1ec7u l\u1edbn h\u01a1n, c\u00e2n nh\u1eafc d\u00f9ng Google Cloud SQL ho\u1eb7c Firestore.\n"}], "grading": {"eval_id": 2, "config": "without_skill", "assertions": [{"text": "3+ tables", "passed": true, "evidence": "Found 'pipeline'"}, {"text": "ref relationships", "passed": true, "evidence": "Found 'ref \u2192'"}, {"text": "key columns", "passed": true, "evidence": "Found 'key'"}, {"text": "status enum", "passed": true, "evidence": "Found 'enum'"}, {"text": "GPS/location", "passed": true, "evidence": "Found 'gps'"}]}}, {"id": "eval-3-proposal-with_skill", "prompt": "T\u00f4i c\u1ea7n t\u1ea1o proposal v\u00e0 b\u00e1o gi\u00e1 \u0111\u1ec3 ch\u00e0o h\u00e0ng cho m\u1ed9t c\u00f4ng ty B\u0110S c\u00f4ng nghi\u1ec7p mu\u1ed1n x\u00e2y d\u1ef1ng h\u1ec7 th\u1ed1ng qu\u1ea3n l\u00fd giao d\u1ecbch tr\u00ean AppSheet. H\u1ecd c\u00f3 kho\u1ea3ng 10 sale, 2 k\u1ebf to\u00e1n. L\u00e0m proposal chuy\u00ean nghi\u1ec7p.", "eval_id": 3, "outputs": [{"name": "response.md", "type": "text", "content": "# PROPOSAL & B\u00c1O GI\u00c1 TRI\u1ec2N KHAI\n# H\u1ec6 TH\u1ed0NG QU\u1ea2N L\u00dd GIAO D\u1ecaCH B\u0110S C\u00d4NG NGHI\u1ec6P TR\u00caN APPSHEET\n\n---\n\n**Chu\u1ea9n b\u1ecb b\u1edfi:** Chuy\u00ean gia BA & T\u01b0 v\u1ea5n Chuy\u1ec3n \u0111\u1ed5i S\u1ed1  \n**Ng\u00e0y:** 17/05/2026  \n**Phi\u00ean b\u1ea3n:** 1.0 \u2014 B\u1ea3n ch\u00ednh th\u1ee9c  \n**Hi\u1ec7u l\u1ef1c b\u00e1o gi\u00e1:** 30 ng\u00e0y k\u1ec3 t\u1eeb ng\u00e0y ph\u00e1t h\u00e0nh\n\n---\n\n## M\u1ee4C L\u1ee4C\n\n1. T\u1ed5ng quan b\u00e0i to\u00e1n nghi\u1ec7p v\u1ee5\n2. Gi\u1ea3i ph\u00e1p \u0111\u1ec1 xu\u1ea5t \u2014 H\u1ec7 th\u1ed1ng 8 Module\n3. Ph\u1ea1m vi c\u00f4ng vi\u1ec7c & Deliverables\n4. C\u1ea5u tr\u00fac database & Ki\u1ebfn tr\u00fac k\u1ef9 thu\u1eadt\n5. Timeline tri\u1ec3n khai chi ti\u1ebft\n6. B\u00e1o gi\u00e1 \u2014 3 G\u00f3i d\u1ecbch v\u1ee5\n7. \u0110i\u1ec1u kho\u1ea3n support & SLA\n8. \u0110i\u1ec1u ki\u1ec7n h\u1ee3p t\u00e1c & Thanh to\u00e1n\n\n---\n\n## 1. T\u1ed4NG QUAN B\u00c0I TO\u00c1N NGHI\u1ec6P V\u1ee4\n\n### 1.1 Th\u1ef1c tr\u1ea1ng doanh nghi\u1ec7p B\u0110S c\u00f4ng nghi\u1ec7p hi\u1ec7n nay\n\nV\u1edbi quy m\u00f4 **10 sale + 2 k\u1ebf to\u00e1n**, c\u00e1c c\u00f4ng ty B\u0110S c\u00f4ng nghi\u1ec7p th\u01b0\u1eddng \u0111ang v\u1eadn h\u00e0nh theo m\u00f4 h\u00ecnh th\u1ee7 c\u00f4ng v\u1edbi c\u00e1c \u0111i\u1ec3m ngh\u1ebdn \u0111i\u1ec3n h\u00ecnh sau:\n\n| Pain Point | Bi\u1ec3u hi\u1ec7n | H\u1eadu qu\u1ea3 |\n|---|---|---|\n| D\u1eef li\u1ec7u ph\u00e2n t\u00e1n | Sale l\u01b0u th\u00f4ng tin ch\u1ee7 \u0111\u1ea5t trong Excel ri\u00eang, Zalo, s\u1ed5 tay | M\u1ea5t lead khi nh\u00e2n vi\u00ean ngh\u1ec9 vi\u1ec7c, d\u1eef li\u1ec7u kh\u00f4ng \u0111\u1ed3ng nh\u1ea5t |\n| Thi\u1ebfu visibility pipeline | Manager kh\u00f4ng bi\u1ebft deal n\u00e0o \u0111ang \u1edf \u0111\u00e2u, x\u00e1c su\u1ea5t ch\u1ed1t bao nhi\u00eau | Ra quy\u1ebft \u0111\u1ecbnh ch\u1eadm, kh\u00f4ng d\u1ef1 b\u00e1o \u0111\u01b0\u1ee3c doanh thu |\n| B\u00e0n giao k\u1ebf to\u00e1n th\u1ee7 c\u00f4ng | Sau khi ch\u1ed1t, sale g\u1eedi th\u00f4ng tin qua Zalo/email cho k\u1ebf to\u00e1n | Sai s\u00f3t h\u1ee3p \u0111\u1ed3ng, ch\u1eadm tr\u1ec5, thi\u1ebfu l\u1ecbch s\u1eed theo d\u00f5i |\n| Nh\u1eafc thanh to\u00e1n r\u1eddi r\u1ea1c | K\u1ebf to\u00e1n nh\u1edb theo l\u1ecbch c\u00e1 nh\u00e2n ho\u1eb7c ghi ch\u00fa Zalo | B\u1ecf s\u00f3t \u0111\u1ee3t thu, \u1ea3nh h\u01b0\u1edfng d\u00f2ng ti\u1ec1n c\u00f4ng ty |\n| Kh\u00f4ng c\u00f3 b\u00e1o c\u00e1o real-time | B\u00e1o c\u00e1o cu\u1ed1i th\u00e1ng l\u00e0m th\u1ee7 c\u00f4ng t\u1eeb nhi\u1ec1u ngu\u1ed3n | M\u1ea5t 2-3 ng\u00e0y/th\u00e1ng, d\u1ec5 sai s\u1ed1 |\n\n### 1.2 B\u00e0i to\u00e1n c\u1ea7n gi\u1ea3i quy\u1ebft\n\n> **M\u1ee5c ti\u00eau:** X\u00e2y d\u1ef1ng h\u1ec7 th\u1ed1ng qu\u1ea3n l\u00fd t\u1eadp trung tr\u00ean AppSheet \u2014 n\u01a1i 10 sale nh\u1eadp li\u1ec7u t\u1eeb th\u1ef1c \u0111\u1ecba qua \u0111i\u1ec7n tho\u1ea1i, 2 k\u1ebf to\u00e1n theo d\u00f5i ti\u1ebfn \u0111\u1ed9 thanh to\u00e1n, manager c\u00f3 dashboard real-time, t\u1ea5t c\u1ea3 d\u1eef li\u1ec7u \u0111\u1ed3ng nh\u1ea5t v\u00e0 b\u1ea3o m\u1eadt theo ph\u00e2n quy\u1ec1n.\n\n**Quy tr\u00ecnh nghi\u1ec7p v\u1ee5 c\u1ea7n s\u1ed1 h\u00f3a (8 b\u01b0\u1edbc):**\n\n```\n[1] Sale l\u1ea5y th\u00f4ng tin ch\u1ee7 \u0111\u1ea5t\n    \u2193\n[2] Nh\u1eadp ngu\u1ed3n \u0111\u1ea5t v\u00e0o h\u1ec7 th\u1ed1ng (< 3 ph\u00fat)\n    \u2193\n[3] Tri\u1ec3n khai giao b\u00e1n cho kh\u00e1ch h\u00e0ng\n    \u2193\n[4] Theo d\u00f5i pipeline: Quan t\u00e2m \u2192 T\u01b0 v\u1ea5n \u2192 \u0110\u00e0m ph\u00e1n\n    \u2193\n[5] Kh\u00e1ch ch\u1ed1t \u2192 T\u1ea1o giao d\u1ecbch (t\u1ef1 \u0111\u1ed9ng)\n    \u2193\n[6] Chuy\u1ec3n k\u1ebf to\u00e1n l\u00e0m h\u1ee3p \u0111\u1ed3ng (t\u1ef1 \u0111\u1ed9ng notify)\n    \u2193\n[7] Theo d\u00f5i ti\u1ebfn \u0111\u1ed9 thanh to\u00e1n (c\u1ea3nh b\u00e1o t\u1ef1 \u0111\u1ed9ng)\n    \u2193\n[8] Ho\u00e0n t\u1ea5t giao d\u1ecbch, l\u01b0u h\u1ed3 s\u01a1\n```\n\n---\n\n## 2. GI\u1ea2I PH\u00c1P \u0110\u1ec0 XU\u1ea4T \u2014 H\u1ec6 TH\u1ed0NG 8 MODULE\n\n### T\u1ed5ng quan ki\u1ebfn tr\u00fac\n\n```\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502              APPSHEET APPLICATION                    \u2502\n\u251c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502  SALE VIEW   \u2502 MANAGER VIEW \u2502  K\u1ebe TO\u00c1N VIEW         \u2502\n\u2502  (Mobile)    \u2502 (Dashboard)  \u2502  (H\u1ee3p \u0111\u1ed3ng/TT)        \u2502\n\u251c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502                  8 MODULE CORE                       \u2502\n\u2502  Ngu\u1ed3n \u0110\u1ea5t | Ch\u1ee7 \u0110\u1ea5t | Kh\u00e1ch H\u00e0ng | Pipeline        \u2502\n\u2502  Giao D\u1ecbch | K\u1ebf To\u00e1n | Dashboard  | Ph\u00e2n Quy\u1ec1n      \u2502\n\u251c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502         Google Sheets (Database Backend)            \u2502\n\u2502         Google Drive (File Storage)                 \u2502\n\u2502         Gmail / Google Chat (Notifications)         \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n```\n\n### M\u00f4 t\u1ea3 8 Module\n\n| # | Module | Ng\u01b0\u1eddi d\u00f9ng ch\u00ednh | T\u00ednh n\u0103ng c\u1ed1t l\u00f5i |\n|---|---|---|---|\n| 1 | **Ngu\u1ed3n \u0110\u1ea5t** | Sale | Nh\u1eadp, tra c\u1ee9u, c\u1eadp nh\u1eadt tr\u1ea1ng th\u00e1i ngu\u1ed3n \u0111\u1ea5t. Map view v\u1ecb tr\u00ed GPS |\n| 2 | **Ch\u1ee7 \u0110\u1ea5t** | Sale + Manager | H\u1ed3 s\u01a1 ch\u1ee7 \u0111\u1ea5t, l\u1ecbch s\u1eed li\u00ean h\u1ec7, tr\u1ea1ng th\u00e1i h\u1ee3p t\u00e1c |\n| 3 | **Kh\u00e1ch H\u00e0ng** | Sale | CRM kh\u00e1ch mua, nhu c\u1ea7u, ng\u00e2n s\u00e1ch, l\u1ecbch s\u1eed t\u01b0\u01a1ng t\u00e1c |\n| 4 | **Pipeline Sale** | Sale + Manager | Kanban/list theo stage. X\u00e1c su\u1ea5t ch\u1ed1t. Forecast doanh thu |\n| 5 | **Giao D\u1ecbch** | Sale + K\u1ebf to\u00e1n | H\u1ee3p \u0111\u1ed3ng, gi\u00e1 tr\u1ecb, \u0111i\u1ec1u kho\u1ea3n. T\u1ef1 \u0111\u1ed9ng t\u1ea1o khi Pipeline ch\u1ed1t |\n| 6 | **K\u1ebf To\u00e1n & Thanh To\u00e1n** | K\u1ebf to\u00e1n | \u0110\u1ee3t thanh to\u00e1n, c\u1ea3nh b\u00e1o \u0111\u1ebfn h\u1ea1n, theo d\u00f5i d\u00f2ng ti\u1ec1n |\n| 7 | **Dashboard & B\u00e1o C\u00e1o** | Manager + Gi\u00e1m \u0111\u1ed1c | KPI sale, funnel pipeline, doanh thu th\u00e1ng/qu\u00fd, hi\u1ec7u su\u1ea5t team |\n| 8 | **Ph\u00e2n Quy\u1ec1n Nh\u00e2n S\u1ef1** | Admin | Role-based: sale ch\u1ec9 th\u1ea5y data c\u1ee7a m\u00ecnh, k\u1ebf to\u00e1n th\u1ea5y giao d\u1ecbch \u0111\u00e3 ch\u1ed1t |\n\n---\n\n## 3. PH\u1ea0M VI C\u00d4NG VI\u1ec6C & DELIVERABLES\n\n### 3.1 Ph\u00e2n t\u00edch & Thi\u1ebft k\u1ebf (Giai \u0111o\u1ea1n 1)\n\n- [ ] Workshop ph\u00e2n t\u00edch nghi\u1ec7p v\u1ee5 v\u1edbi ban l\u00e3nh \u0111\u1ea1o v\u00e0 \u0111\u1ea1i di\u1ec7n sale/k\u1ebf to\u00e1n (2 bu\u1ed5i, m\u1ed7i bu\u1ed5i 2h)\n- [ ] T\u00e0i li\u1ec7u Business Requirement Document (BRD) \u2014 m\u00f4 t\u1ea3 \u0111\u1ea7y \u0111\u1ee7 quy tr\u00ecnh\n- [ ] Wireframe UX c\u00e1c m\u00e0n h\u00ecnh ch\u00ednh tr\u00ean mobile\n- [ ] Thi\u1ebft k\u1ebf c\u1ea5u tr\u00fac database (6 b\u1ea3ng + quan h\u1ec7)\n- [ ] Thi\u1ebft k\u1ebf lu\u1ed3ng automation v\u00e0 ph\u00e2n quy\u1ec1n\n- [ ] Sign-off v\u1edbi kh\u00e1ch h\u00e0ng tr\u01b0\u1edbc khi build\n\n### 3.2 X\u00e2y d\u1ef1ng h\u1ec7 th\u1ed1ng (Giai \u0111o\u1ea1n 2)\n\n- [ ] Setup Google Workspace (Sheets, Drive, Gmail integration)\n- [ ] X\u00e2y d\u1ef1ng 6 b\u1ea3ng d\u1eef li\u1ec7u v\u1edbi \u0111\u1ea7y \u0111\u1ee7 validation\n- [ ] C\u1ea5u h\u00ecnh 8 module AppSheet v\u1edbi Views \u0111\u1ea7y \u0111\u1ee7\n- [ ] Thi\u1ebft l\u1eadp 4 automation workflow ch\u00ednh\n- [ ] C\u1ea5u h\u00ecnh Security Filter cho 4 role (Sale / Manager / K\u1ebf to\u00e1n / Gi\u00e1m \u0111\u1ed1c)\n- [ ] Build Dashboard v\u1edbi 5 KPI ch\u00ednh\n- [ ] Map View cho ngu\u1ed3n \u0111\u1ea5t (GPS integration)\n- [ ] Test n\u1ed9i b\u1ed9 \u2014 QA to\u00e0n b\u1ed9 lu\u1ed3ng nghi\u1ec7p v\u1ee5\n\n### 3.3 Tri\u1ec3n khai & \u0110\u00e0o t\u1ea1o (Giai \u0111o\u1ea1n 3)\n\n- [ ] Migration d\u1eef li\u1ec7u c\u0169 (n\u1ebfu c\u00f3, t\u1eeb Excel sang h\u1ec7 th\u1ed1ng m\u1edbi)\n- [ ] Training sale (bu\u1ed5i th\u1ef1c h\u00e0nh tr\u00ean \u0111i\u1ec7n tho\u1ea1i, 2h/bu\u1ed5i)\n- [ ] Training k\u1ebf to\u00e1n v\u00e0 manager (bu\u1ed5i ri\u00eang, 2h/bu\u1ed5i)\n- [ ] T\u00e0i li\u1ec7u h\u01b0\u1edbng d\u1eabn s\u1eed d\u1ee5ng (PDF + video h\u01b0\u1edbng d\u1eabn ng\u1eafn)\n- [ ] Go-live ch\u00ednh th\u1ee9c v\u1edbi support tr\u1ef1c ti\u1ebfp 1 tu\u1ea7n \u0111\u1ea7u\n\n### 3.4 B\u00e0n giao\n\n- [ ] Source Google Sheets (t\u1ea5t c\u1ea3 b\u1ea3ng, c\u00f4ng th\u1ee9c)\n- [ ] AppSheet app (2 version: Sale mobile + Manager desktop)\n- [ ] T\u00e0i li\u1ec7u k\u1ef9 thu\u1eadt (database schema, automation docs)\n- [ ] T\u00e0i li\u1ec7u v\u1eadn h\u00e0nh (SOP cho t\u1eebng role)\n- [ ] Video training cho t\u1eebng nh\u00f3m ng\u01b0\u1eddi d\u00f9ng\n\n---\n\n## 4. C\u1ea4U TR\u00daC DATABASE & KI\u1ebeN TR\u00daC K\u1ef8 THU\u1eacT\n\n### 4.1 S\u01a1 \u0111\u1ed3 quan h\u1ec7 b\u1ea3ng\n\n```\nCHU_DAT (1) \u2500\u2500\u2500\u2500\u2500\u2500< NGUON_DAT (N)\n                         \u2502\n                         \u2502 (1)\n                         \u2193\nNHAN_SU \u2500\u2500\u2500\u2500\u2500\u2500> PIPELINE_SALE\nKHACH_HANG \u2500\u2500\u2500>      (N)\n                         \u2502\n                         \u2502 (1)\n                         \u2193\n                    GIAO_DICH (N)\n                         \u2502\n                         \u2502 (1)\n                         \u2193\n                    THANH_TOAN (N)\n```\n\n### 4.2 Chi ti\u1ebft b\u1ea3ng NGUON_DAT\n\n| Column | Type | Validation | Ghi ch\u00fa |\n|---|---|---|---|\n| ID_Nguon | Text (Key) | Auto: ND-2026-001 | T\u1ef1 t\u0103ng |\n| Ten_KhuDat | Text | Required | T\u00ean g\u1ecdi n\u1ed9i b\u1ed9 |\n| Chu_Dat_Ref | Ref \u2192 CHU_DAT | Required | |\n| DienTich_m2 | Decimal | > 0 | Di\u1ec7n t\u00edch m\u00b2 |\n| GiaBan_Ty | Decimal | > 0 | Gi\u00e1 ch\u1ee7 mu\u1ed1n b\u00e1n |\n| ViTri_GPS | LatLong | \u2014 | Hi\u1ec3n th\u1ecb tr\u00ean Map View |\n| TinhTrang_PhapLy | Enum | Required | S\u1ed5 \u0111\u1ecf / S\u1ed5 h\u1ed3ng / Ch\u1edd s\u1ed5 / Tranh ch\u1ea5p |\n| Status | Enum | Default: M\u1edbi | M\u1edbi / \u0110ang giao b\u00e1n / \u0110\u00e3 ch\u1ed1t / Ng\u1eebng b\u00e1n |\n| Sale_PhuTrach | Ref \u2192 NHAN_SU | Default: USEREMAIL() | |\n| Ngay_Lay | Date | Required | |\n| Ghi_Chu | LongText | \u2014 | |\n\n### 4.3 Chi ti\u1ebft b\u1ea3ng PIPELINE_SALE\n\n| Column | Type | Validation | Ghi ch\u00fa |\n|---|---|---|---|\n| ID_Pipeline | Text (Key) | Auto: PL-2026-001 | |\n| KH_Ref | Ref \u2192 KHACH_HANG | Required | |\n| Dat_Ref | Ref \u2192 NGUON_DAT | Required | |\n| Sale_Ref | Ref \u2192 NHAN_SU | Required | |\n| Stage | Enum | Required | Quan t\u00e2m \u2192 T\u01b0 v\u1ea5n \u2192 Xem th\u1ef1c \u0111\u1ecba \u2192 \u0110\u00e0m ph\u00e1n \u2192 Ch\u1edd Q\u0110 \u2192 Ch\u1ed1t / R\u1edbt |\n| XacSuat_Chot | Enum | \u2014 | 10% / 25% / 50% / 75% / 90% |\n| GiaDeXuat_Ty | Decimal | > 0 | |\n| Ngay_TiepCan | Date | Required | |\n| Ngay_CapNhat | DateTime | Auto | |\n| Ghi_Chu | LongText | \u2014 | |\n\n### 4.4 Automation Workflow (4 quy tr\u00ecnh t\u1ef1 \u0111\u1ed9ng)\n\n**Workflow 1 \u2014 Th\u00f4ng b\u00e1o lead m\u1edbi cho sale**\n```\nTrigger : On Add \u2014 b\u1ea3ng KHACH_HANG\nCondition: [Sale_PhuTrach] = USEREMAIL()\nAction   : Send Notification\nMessage  : \"Lead m\u1edbi: [Ten_KH] | S\u0110T: [SDT] | Ng\u00e2n s\u00e1ch: [NganSach_Ty] t\u1ef7\"\n```\n\n**Workflow 2 \u2014 T\u1ea1o giao d\u1ecbch khi pipeline ch\u1ed1t**\n```\nTrigger : On Change \u2014 b\u1ea3ng PIPELINE_SALE\nCondition: [Stage] = \"Ch\u1ed1t\"\nAction 1 : Add Row \u2192 GIAO_DICH (copy th\u00f4ng tin t\u1eeb pipeline)\nAction 2 : Send Notification \u2192 K\u1ebf to\u00e1n + Manager\nMessage  : \"Deal m\u1edbi c\u1ea7n x\u1eed l\u00fd H\u0110: [KH_Ref] - [GiaDeXuat_Ty] t\u1ef7\"\n```\n\n**Workflow 3 \u2014 C\u1ea3nh b\u00e1o thanh to\u00e1n s\u1eafp \u0111\u1ebfn h\u1ea1n**\n```\nTrigger  : Scheduled \u2014 8:00 s\u00e1ng m\u1ed7i ng\u00e0y\nCondition: [NgayDuKien] <= TODAY() + 3\n           AND [TrangThai] = \"Ch\u01b0a \u0111\u1ebfn h\u1ea1n\"\nAction   : Send Email \u2192 K\u1ebf to\u00e1n + Manager\nSubject  : \"\u26a0 Nh\u1eafc nh\u1edf thanh to\u00e1n: [ID_GiaoDich]\"\nBody     : \"\u0110\u1ee3t [Dot_ThanhToan] | S\u1ed1 ti\u1ec1n: [SoTien_Ty] t\u1ef7 | H\u1ea1n: [NgayDuKien]\"\n```\n\n**Workflow 4 \u2014 T\u1ef1 \u0111\u1ed9ng \u0111\u00e1nh d\u1ea5u thanh to\u00e1n tr\u1ec5 h\u1ea1n**\n```\nTrigger  : Scheduled \u2014 7:00 s\u00e1ng m\u1ed7i ng\u00e0y\nCondition: [NgayDuKien] < TODAY()\n           AND [TrangThai] <> \"\u0110\u00e3 nh\u1eadn\"\nAction   : Set Row Value \u2192 [TrangThai] = \"Tr\u1ec5 h\u1ea1n\"\n```\n\n### 4.5 Security Filter theo Role\n\n```\nSALE (ch\u1ec9 th\u1ea5y data c\u1ee7a m\u00ecnh):\n  NGUON_DAT   : [Sale_PhuTrach] = USEREMAIL()\n  KHACH_HANG  : [Sale_PhuTrach] = USEREMAIL()\n  PIPELINE    : [Sale_Ref] = USEREMAIL()\n\nMANAGER (th\u1ea5y to\u00e0n b\u1ed9 team):\n  T\u1ea5t c\u1ea3 b\u1ea3ng: IN(USEREMAIL(), Manager_Email_List)\n\nK\u1ebe TO\u00c1N (ch\u1ec9 th\u1ea5y giao d\u1ecbch \u0111\u00e3 ch\u1ed1t):\n  GIAO_DICH   : [TrangThai_HopDong] <> \"\"  (t\u1ee9c l\u00e0 \u0111\u00e3 c\u00f3 h\u1ee3p \u0111\u1ed3ng)\n  THANH_TOAN  : IN([GiaoDich_Ref], KeToan_Assigned_List)\n\nGI\u00c1M \u0110\u1ed0C (xem t\u1ea5t c\u1ea3, kh\u00f4ng ch\u1ec9nh s\u1eeda):\n  Read-only access to\u00e0n b\u1ed9 + Dashboard full\n```\n\n---\n\n## 5. TIMELINE TRI\u1ec2N KHAI CHI TI\u1ebeT\n\n### G\u00f3i Standard (8 tu\u1ea7n \u2014 khuy\u1ebfn ngh\u1ecb)\n\n| Tu\u1ea7n | Giai \u0111o\u1ea1n | C\u00f4ng vi\u1ec7c ch\u00ednh | Deliverable |\n|---|---|---|---|\n| **Tu\u1ea7n 1** | Ph\u00e2n t\u00edch | Workshop nghi\u1ec7p v\u1ee5 (2 bu\u1ed5i). Kh\u1ea3o s\u00e1t quy tr\u00ecnh hi\u1ec7n t\u1ea1i. Ph\u1ecfng v\u1ea5n sale, k\u1ebf to\u00e1n | BRD Document |\n| **Tu\u1ea7n 2** | Thi\u1ebft k\u1ebf | Database schema. Wireframe UX mobile. Lu\u1ed3ng automation. Sign-off kh\u00e1ch h\u00e0ng | Design Document + Wireframe |\n| **Tu\u1ea7n 3** | Build Core | Setup Google Workspace. X\u00e2y 6 b\u1ea3ng d\u1eef li\u1ec7u. Validation & Enum | Google Sheets backend |\n| **Tu\u1ea7n 4** | Build App | 8 module AppSheet. Form view mobile. Table view + filter | App v0.1 (n\u1ed9i b\u1ed9 test) |\n| **Tu\u1ea7n 5** | Automation | 4 workflow t\u1ef1 \u0111\u1ed9ng. Email/notification. Security filter 4 role | App v0.2 (automation) |\n| **Tu\u1ea7n 6** | Dashboard | 5 KPI charts. Pipeline funnel. B\u00e1o c\u00e1o doanh thu. Map view | App v0.3 (full feature) |\n| **Tu\u1ea7n 7** | QA & UAT | Test to\u00e0n b\u1ed9 lu\u1ed3ng. Fix bugs. Migration d\u1eef li\u1ec7u c\u0169 (n\u1ebfu c\u00f3). UAT v\u1edbi kh\u00e1ch h\u00e0ng | App v1.0 (production-ready) |\n| **Tu\u1ea7n 8** | Go-live | Training sale (2 bu\u1ed5i). Training k\u1ebf to\u00e1n/manager (2 bu\u1ed5i). Go-live. Support tu\u1ea7n \u0111\u1ea7u | B\u00e0n giao to\u00e0n b\u1ed9 |\n\n---\n\n## 6. B\u00c1O GI\u00c1 \u2014 3 G\u00d3I D\u1ecaCH V\u1ee4\n\n### So s\u00e1nh 3 g\u00f3i\n\n| T\u00ednh n\u0103ng | Basic | Standard | Enterprise |\n|---|---|---|---|\n| **Module** | 4 module c\u01a1 b\u1ea3n | 7 module | Full 8 module |\n| **Ngu\u1ed3n \u0110\u1ea5t + Ch\u1ee7 \u0110\u1ea5t** | \u2713 | \u2713 | \u2713 |\n| **Kh\u00e1ch H\u00e0ng + Pipeline** | \u2713 | \u2713 | \u2713 |\n| **Giao D\u1ecbch + K\u1ebf To\u00e1n** | \u2014 | \u2713 | \u2713 |\n| **Dashboard & B\u00e1o C\u00e1o** | C\u01a1 b\u1ea3n | Full | Custom |\n| **Map View GPS** | \u2014 | \u2713 | \u2713 |\n| **Automation Workflow** | 1 | 4 | 4 + Custom |\n| **Security Filter** | 2 role | 4 role | 4 role + Custom |\n| **S\u1ed1 l\u01b0\u1ee3ng user** | T\u1ed1i \u0111a 5 | T\u1ed1i \u0111a 15 | Kh\u00f4ng gi\u1edbi h\u1ea1n |\n| **Migration d\u1eef li\u1ec7u c\u0169** | \u2014 | \u2713 (1 file) | \u2713 (kh\u00f4ng gi\u1edbi h\u1ea1n) |\n| **Training** | 2 bu\u1ed5i | 5 bu\u1ed5i | 8 bu\u1ed5i + video |\n| **T\u00e0i li\u1ec7u h\u01b0\u1edbng d\u1eabn** | PDF c\u01a1 b\u1ea3n | PDF + SOP | PDF + SOP + Video |\n| **Timeline tri\u1ec3n khai** | 4 tu\u1ea7n | 8 tu\u1ea7n | 12 tu\u1ea7n |\n| **Support sau go-live** | 1 th\u00e1ng | 3 th\u00e1ng | 12 th\u00e1ng |\n| **SLA response** | 48h | 24h | 4h |\n\n---\n\n### Chi ti\u1ebft b\u00e1o gi\u00e1\n\n#### G\u00d3I BASIC \u2014 45.000.000 VN\u0110\n\n> **Ph\u00f9 h\u1ee3p:** Doanh nghi\u1ec7p mu\u1ed1n th\u1eed nghi\u1ec7m h\u1ec7 th\u1ed1ng, \u0111\u1ed9i nh\u1ecf \u2264 5 ng\u01b0\u1eddi, ng\u00e2n s\u00e1ch h\u1ea1n ch\u1ebf\n\n**Bao g\u1ed3m:**\n- 4 module: Ngu\u1ed3n \u0110\u1ea5t, Ch\u1ee7 \u0110\u1ea5t, Kh\u00e1ch H\u00e0ng, Pipeline Sale\n- 1 automation workflow (th\u00f4ng b\u00e1o lead m\u1edbi)\n- Security filter 2 role (Sale + Manager)\n- Dashboard c\u01a1 b\u1ea3n: s\u1ed1 ngu\u1ed3n \u0111\u1ea5t, pipeline overview\n- Training 2 bu\u1ed5i (2h/bu\u1ed5i)\n- Support 1 th\u00e1ng sau go-live (response trong 48h)\n- T\u00e0i li\u1ec7u h\u01b0\u1edbng d\u1eabn s\u1eed d\u1ee5ng d\u1ea1ng PDF\n\n**Kh\u00f4ng bao g\u1ed3m:** Module Giao D\u1ecbch, K\u1ebf To\u00e1n, Map View, Migration d\u1eef li\u1ec7u c\u0169\n\n---\n\n#### G\u00d3I STANDARD \u2014 85.000.000 VN\u0110 \u2b50 KHUY\u1ebeN NGH\u1eca\n\n> **Ph\u00f9 h\u1ee3p:** Doanh nghi\u1ec7p 10-15 nh\u00e2n vi\u00ean, mu\u1ed1n h\u1ec7 th\u1ed1ng \u0111\u1ea7y \u0111\u1ee7 t\u1eeb sale \u0111\u1ebfn k\u1ebf to\u00e1n  \n> **Ph\u00f9 h\u1ee3p nh\u1ea5t v\u1edbi y\u00eau c\u1ea7u c\u1ee7a b\u1ea1n: 10 sale + 2 k\u1ebf to\u00e1n**\n\n**Bao g\u1ed3m to\u00e0n b\u1ed9 Basic, c\u1ed9ng th\u00eam:**\n- Th\u00eam 3 module: Giao D\u1ecbch, K\u1ebf To\u00e1n & Thanh To\u00e1n, Dashboard n\u00e2ng cao\n- 4 automation workflow \u0111\u1ea7y \u0111\u1ee7 (lead m\u1edbi, ch\u1ed1t deal, nh\u1eafc thanh to\u00e1n, tr\u1ec5 h\u1ea1n)\n- Security filter 4 role (Sale / Manager / K\u1ebf to\u00e1n / Gi\u00e1m \u0111\u1ed1c)\n- Map View GPS cho ngu\u1ed3n \u0111\u1ea5t\n- Dashboard 5 KPI: Pipeline funnel, doanh thu th\u00e1ng/qu\u00fd, hi\u1ec7u su\u1ea5t sale, t\u1ed5ng h\u1ee3p thanh to\u00e1n\n- Migration d\u1eef li\u1ec7u c\u0169 t\u1eeb 1 file Excel hi\u1ec7n t\u1ea1i\n- Training 5 bu\u1ed5i (sale ri\u00eang, k\u1ebf to\u00e1n ri\u00eang, manager ri\u00eang)\n- Support 3 th\u00e1ng sau go-live (response trong 24h)\n- T\u00e0i li\u1ec7u h\u01b0\u1edbng d\u1eabn PDF + SOP cho t\u1eebng role\n\n**L\u00fd do ch\u1ecdn g\u00f3i n\u00e0y:** V\u1edbi 10 sale + 2 k\u1ebf to\u00e1n, b\u1ea1n c\u1ea7n \u0111\u1ea7y \u0111\u1ee7 v\u00f2ng qu\u1ea3n l\u00fd t\u1eeb ngu\u1ed3n \u0111\u1ea5t \u2192 pipeline \u2192 h\u1ee3p \u0111\u1ed3ng \u2192 thanh to\u00e1n. G\u00f3i Basic thi\u1ebfu module k\u1ebf to\u00e1n, g\u00f3i Enterprise s\u1ebd d\u01b0 th\u1eeba t\u00ednh n\u0103ng custom.\n\n---\n\n#### G\u00d3I ENTERPRISE \u2014 150.000.000 VN\u0110\n\n> **Ph\u00f9 h\u1ee3p:** Doanh nghi\u1ec7p l\u1edbn, nhi\u1ec1u chi nh\u00e1nh, c\u1ea7n t\u00f9y bi\u1ebfn cao, t\u00edch h\u1ee3p h\u1ec7 th\u1ed1ng kh\u00e1c\n\n**Bao g\u1ed3m to\u00e0n b\u1ed9 Standard, c\u1ed9ng th\u00eam:**\n- Full 8 module bao g\u1ed3m module Ph\u00e2n Quy\u1ec1n Nh\u00e2n S\u1ef1 custom\n- Custom automation theo quy tr\u00ecnh ri\u00eang c\u1ee7a doanh nghi\u1ec7p\n- Custom dashboard theo y\u00eau c\u1ea7u b\u00e1o c\u00e1o ban gi\u00e1m \u0111\u1ed1c\n- T\u00edch h\u1ee3p h\u1ec7 th\u1ed1ng kh\u00e1c (n\u1ebfu c\u00f3): ph\u1ea7n m\u1ec1m k\u1ebf to\u00e1n, ERP\n- Migration d\u1eef li\u1ec7u t\u1eeb nhi\u1ec1u ngu\u1ed3n (kh\u00f4ng gi\u1edbi h\u1ea1n file)\n- Training 8 bu\u1ed5i + video h\u01b0\u1edbng d\u1eabn cho t\u1eebng role\n- Support 12 th\u00e1ng (response trong 4h trong gi\u1edd h\u00e0nh ch\u00ednh)\n- Quarterly review (review 3 th\u00e1ng/l\u1ea7n, \u0111\u1ec1 xu\u1ea5t t\u1ed1i \u01b0u h\u1ec7 th\u1ed1ng)\n- 1 l\u1ea7n n\u00e2ng c\u1ea5p/thay \u0111\u1ed5i t\u00ednh n\u0103ng trong n\u0103m \u0111\u1ea7u (kh\u00f4ng t\u00ednh ph\u00ed)\n\n---\n\n### B\u1ea3ng t\u00f3m t\u1eaft b\u00e1o gi\u00e1\n\n| G\u00f3i | Gi\u00e1 ni\u00eam y\u1ebft | Chi\u1ebft kh\u1ea5u \u0111\u1ed1i t\u00e1c* | Gi\u00e1 sau CK |\n|---|---|---|---|\n| Basic | 45.000.000 VN\u0110 | 15% = 6.750.000 | **38.250.000 VN\u0110** |\n| Standard \u2b50 | 85.000.000 VN\u0110 | 15% = 12.750.000 | **72.250.000 VN\u0110** |\n| Enterprise | 150.000.000 VN\u0110 | 15% = 22.500.000 | **127.500.000 VN\u0110** |\n\n*Chi\u1ebft kh\u1ea5u \u00e1p d\u1ee5ng khi c\u00f3 \u0111\u1ed1i t\u00e1c gi\u1edbi thi\u1ec7u ho\u1eb7c k\u00fd h\u1ee3p \u0111\u1ed3ng tr\u01b0\u1edbc ng\u00e0y 30/06/2026\n\n**Ph\u00ed ph\u00e1t sinh ngo\u00e0i g\u00f3i (n\u1ebfu c\u00f3):**\n- Thay \u0111\u1ed5i t\u00ednh n\u0103ng ph\u00e1t sinh ngo\u00e0i scope: 2.000.000 VN\u0110/ng\u00e0y c\u00f4ng\n- Migration d\u1eef li\u1ec7u th\u00eam (g\u00f3i Standard): 3.000.000 VN\u0110/file Excel\n- Bu\u1ed5i training th\u00eam: 2.500.000 VN\u0110/bu\u1ed5i 2h\n- Gia h\u1ea1n support sau k\u1ef3 h\u1ea1n: 5.000.000 VN\u0110/th\u00e1ng (g\u00f3i Standard)\n\n---\n\n## 7. \u0110I\u1ec0U KHO\u1ea2N SUPPORT & SLA\n\n### 7.1 Cam k\u1ebft ch\u1ea5t l\u01b0\u1ee3ng\n\n| H\u1ea1ng m\u1ee5c | Cam k\u1ebft |\n|---|---|\n| **Uptime h\u1ec7 th\u1ed1ng** | AppSheet + Google Workspace \u0111\u1ea3m b\u1ea3o 99.9% uptime theo SLA c\u1ee7a Google |\n| **B\u1ea3o m\u1eadt d\u1eef li\u1ec7u** | D\u1eef li\u1ec7u l\u01b0u tr\u00ean Google Drive c\u1ee7a doanh nghi\u1ec7p, kh\u00f4ng qua server trung gian |\n| **Backup** | Google Sheets t\u1ef1 \u0111\u1ed9ng l\u01b0u l\u1ecbch s\u1eed 30 ng\u00e0y. Khuy\u1ebfn ngh\u1ecb backup th\u1ee7 c\u00f4ng h\u00e0ng tu\u1ea7n |\n| **B\u00e0n giao source** | To\u00e0n b\u1ed9 Google Sheets v\u00e0 c\u1ea5u h\u00ecnh AppSheet thu\u1ed9c s\u1edf h\u1eefu c\u1ee7a doanh nghi\u1ec7p |\n\n### 7.2 Ph\u1ea1m vi support sau go-live\n\n**Bao g\u1ed3m trong g\u00f3i support:**\n- S\u1eeda l\u1ed7i ph\u00e1t sinh t\u1eeb h\u1ec7 th\u1ed1ng \u0111\u01b0\u1ee3c b\u00e0n giao (bugs, automation kh\u00f4ng ch\u1ea1y \u0111\u00fang)\n- H\u01b0\u1edbng d\u1eabn s\u1eed d\u1ee5ng qua Zalo/email cho nh\u00e2n vi\u00ean m\u1edbi\n- \u0110i\u1ec1u ch\u1ec9nh nh\u1ecf: th\u00eam/s\u1eeda Enum value, \u0111i\u1ec1u ch\u1ec9nh validation\n- H\u1ed7 tr\u1ee3 kh\u1eafc ph\u1ee5c khi Google c\u1eadp nh\u1eadt AppSheet g\u00e2y \u1ea3nh h\u01b0\u1edfng\n\n**Kh\u00f4ng bao g\u1ed3m (t\u00ednh ph\u00ed ng\u00e0y c\u00f4ng):**\n- Th\u00eam module m\u1edbi\n- Thay \u0111\u1ed5i c\u1ea5u tr\u00fac database\n- X\u00e2y d\u1ef1ng b\u00e1o c\u00e1o m\u1edbi ngo\u00e0i scope ban \u0111\u1ea7u\n- Training nh\u00e2n vi\u00ean m\u1edbi sau k\u1ef3 h\u1ea1n training\n\n### 7.3 K\u00eanh h\u1ed7 tr\u1ee3\n\n- **K\u00eanh ch\u00ednh:** Zalo nh\u00f3m ri\u00eang (Sale + K\u1ebf to\u00e1n + Manager + Support team)\n- **B\u00e1o l\u1ed7i kh\u1ea9n:** G\u1ecdi \u0111i\u1ec7n tr\u1ef1c ti\u1ebfp (gi\u1edd h\u00e0nh ch\u00ednh 8:00\u201317:30, th\u1ee9 2\u20136)\n- **B\u00e1o c\u00e1o \u0111\u1ecbnh k\u1ef3:** Email t\u1ed5ng h\u1ee3p t\u00ecnh tr\u1ea1ng h\u1ec7 th\u1ed1ng h\u00e0ng tu\u1ea7n (2 th\u00e1ng \u0111\u1ea7u)\n\n---\n\n## 8. \u0110I\u1ec0U KI\u1ec6N H\u1ee2P T\u00c1C & THANH TO\u00c1N\n\n### 8.1 L\u1ecbch thanh to\u00e1n\n\n| \u0110\u1ee3t | Th\u1eddi \u0111i\u1ec3m | T\u1ef7 l\u1ec7 | S\u1ed1 ti\u1ec1n (G\u00f3i Standard) |\n|---|---|---|---|\n| **\u0110\u1ee3t 1** | K\u00fd h\u1ee3p \u0111\u1ed3ng | 40% | 34.000.000 VN\u0110 |\n| **\u0110\u1ee3t 2** | Sign-off thi\u1ebft k\u1ebf (h\u1ebft tu\u1ea7n 2) | 30% | 25.500.000 VN\u0110 |\n| **\u0110\u1ee3t 3** | Go-live ch\u00ednh th\u1ee9c (h\u1ebft tu\u1ea7n 8) | 30% | 25.500.000 VN\u0110 |\n\n*S\u1ed1 ti\u1ec1n tr\u00ean ch\u01b0a bao g\u1ed3m VAT 10%*\n\n### 8.2 \u0110i\u1ec1u ki\u1ec7n h\u1ee3p t\u00e1c\n\n**Ph\u00eda doanh nghi\u1ec7p cung c\u1ea5p:**\n- T\u00e0i kho\u1ea3n Google Workspace (Business ho\u1eb7c Enterprise) cho to\u00e0n b\u1ed9 nh\u00e2n vi\u00ean\n- Danh s\u00e1ch nh\u00e2n vi\u00ean + email + role\n- D\u1eef li\u1ec7u l\u1ecbch s\u1eed (n\u1ebfu c\u00f3, format Excel)\n- \u0110\u1ea7u m\u1ed1i li\u00ean h\u1ec7 d\u1ef1 \u00e1n: 1 ng\u01b0\u1eddi t\u1eeb management, 1 t\u1eeb sale, 1 t\u1eeb k\u1ebf to\u00e1n\n- Tham gia \u0111\u1ea7y \u0111\u1ee7 c\u00e1c bu\u1ed5i workshop v\u00e0 UAT theo l\u1ecbch \u0111\u00e3 th\u1ed1ng nh\u1ea5t\n\n**L\u01b0u \u00fd v\u1ec1 AppSheet:**\n- AppSheet y\u00eau c\u1ea7u g\u00f3i **AppSheet Core** ho\u1eb7c cao h\u01a1n cho ph\u00e2n quy\u1ec1n n\u00e2ng cao\n- Chi ph\u00ed AppSheet license: ~10 USD/user/th\u00e1ng (Google Workspace Business Plus \u0111\u00e3 bao g\u1ed3m m\u1ed9t s\u1ed1 t\u00ednh n\u0103ng)\n- **Chi ph\u00ed n\u00e0y l\u00e0 chi ph\u00ed tr\u1ef1c ti\u1ebfp v\u1edbi Google, kh\u00f4ng bao g\u1ed3m trong b\u00e1o gi\u00e1 tri\u1ec3n khai tr\u00ean**\n- \u01af\u1edbc t\u00ednh: 12 users \u00d7 10 USD \u00d7 12 th\u00e1ng \u2248 **34.560.000 VN\u0110/n\u0103m** (t\u00ednh theo t\u1ef7 gi\u00e1 24.000)\n\n### 8.3 \u0110i\u1ec1u kho\u1ea3n b\u1ea3o h\u00e0nh\n\n- **B\u1ea3o h\u00e0nh l\u1ed7i:** 12 th\u00e1ng k\u1ec3 t\u1eeb ng\u00e0y go-live ch\u00ednh th\u1ee9c (to\u00e0n b\u1ed9 g\u00f3i)\n- **\u0110\u1ecbnh ngh\u0129a l\u1ed7i \u0111\u01b0\u1ee3c b\u1ea3o h\u00e0nh:** T\u00ednh n\u0103ng kh\u00f4ng ho\u1ea1t \u0111\u1ed9ng \u0111\u00fang nh\u01b0 thi\u1ebft k\u1ebf \u0111\u00e3 sign-off\n- **Kh\u00f4ng b\u1ea3o h\u00e0nh:** Thay \u0111\u1ed5i y\u00eau c\u1ea7u nghi\u1ec7p v\u1ee5 sau khi sign-off, l\u1ed7i do thay \u0111\u1ed5i t\u1eeb ph\u00eda Google\n\n### 8.4 Quy\u1ec1n s\u1edf h\u1eefu & B\u1ea3o m\u1eadt\n\n- To\u00e0n b\u1ed9 d\u1eef li\u1ec7u v\u00e0 c\u1ea5u h\u00ecnh h\u1ec7 th\u1ed1ng thu\u1ed9c s\u1edf h\u1eefu c\u1ee7a doanh nghi\u1ec7p\n- B\u00ean tri\u1ec3n khai k\u00fd cam k\u1ebft b\u1ea3o m\u1eadt th\u00f4ng tin (NDA) tr\u01b0\u1edbc khi b\u1eaft \u0111\u1ea7u d\u1ef1 \u00e1n\n- Kh\u00f4ng l\u01b0u tr\u1eef b\u1ea3n sao d\u1eef li\u1ec7u doanh nghi\u1ec7p tr\u00ean h\u1ec7 th\u1ed1ng c\u1ee7a b\u00ean tri\u1ec3n khai\n\n---\n\n## KHUY\u1ebeN NGH\u1eca & B\u01af\u1edaC TI\u1ebeP THEO\n\n### Khuy\u1ebfn ngh\u1ecb cho doanh nghi\u1ec7p 10 sale + 2 k\u1ebf to\u00e1n\n\n**Ch\u1ecdn G\u00f3i Standard (85.000.000 VN\u0110)** v\u00ec:\n\n1. **\u0110\u1ee7 module cho to\u00e0n b\u1ed9 v\u00f2ng nghi\u1ec7p v\u1ee5** \u2014 t\u1eeb ngu\u1ed3n \u0111\u1ea5t \u0111\u1ebfn thu ti\u1ec1n cu\u1ed1i c\u00f9ng\n2. **2 k\u1ebf to\u00e1n c\u1ea7n \u0111\u1ea7y \u0111\u1ee7 t\u00ednh n\u0103ng** theo d\u00f5i h\u1ee3p \u0111\u1ed3ng v\u00e0 thanh to\u00e1n \u2014 G\u00f3i Basic kh\u00f4ng c\u00f3\n3. **10 sale c\u1ea7n ph\u00e2n quy\u1ec1n r\u00f5 r\u00e0ng** \u2014 Security filter 4 role trong Standard \u0111\u1ea3m b\u1ea3o sale kh\u00f4ng xem \u0111\u01b0\u1ee3c data c\u1ee7a nhau\n4. **ROI r\u00f5 r\u00e0ng** \u2014 Ti\u1ebft ki\u1ec7m 2-3 ng\u00e0y/th\u00e1ng cho b\u00e1o c\u00e1o th\u1ee7 c\u00f4ng, lo\u1ea1i b\u1ecf r\u1ee7i ro m\u1ea5t data khi nh\u00e2n vi\u00ean ngh\u1ec9\n\n**\u01af\u1edbc t\u00ednh ROI:**\n- Ti\u1ebft ki\u1ec7m th\u1eddi gian b\u00e1o c\u00e1o: 3 ng\u00e0y \u00d7 12 th\u00e1ng \u00d7 chi ph\u00ed nh\u00e2n s\u1ef1 = ~36 ng\u00e0y c\u00f4ng/n\u0103m\n- T\u0103ng t\u1ef7 l\u1ec7 ch\u1ed1t deal nh\u1edd pipeline r\u00f5 r\u00e0ng: \u01b0\u1edbc t\u00ednh t\u0103ng 10-15% hi\u1ec7u qu\u1ea3 b\u00e1m \u0111u\u1ed5i\n- Gi\u1ea3m r\u1ee7i ro b\u1ecf s\u00f3t thanh to\u00e1n: 1 \u0111\u1ee3t thanh to\u00e1n b\u1ecf s\u00f3t = v\u00e0i tr\u0103m tri\u1ec7u \u0111\u1ebfn h\u00e0ng t\u1ef7 \u0111\u1ed3ng r\u1ee7i ro\n\n### C\u00e1c b\u01b0\u1edbc ti\u1ebfp theo\n\n1. **X\u00e1c nh\u1eadn quan t\u00e2m** \u2014 Ph\u1ea3n h\u1ed3i proposal n\u00e0y trong v\u00f2ng 7 ng\u00e0y l\u00e0m vi\u1ec7c\n2. **Bu\u1ed5i demo mi\u1ec5n ph\u00ed** \u2014 Ch\u00fang t\u00f4i s\u1ebd demo prototype h\u1ec7 th\u1ed1ng (45 ph\u00fat, online ho\u1eb7c tr\u1ef1c ti\u1ebfp)\n3. **K\u00fd h\u1ee3p \u0111\u1ed3ng nguy\u00ean t\u1eafc** \u2014 Sau khi th\u1ed1ng nh\u1ea5t g\u00f3i v\u00e0 \u0111i\u1ec1u kho\u1ea3n\n4. **Kick-off workshop** \u2014 B\u1eaft \u0111\u1ea7u ph\u00e2n t\u00edch nghi\u1ec7p v\u1ee5 tu\u1ea7n 1\n\n---\n\n## TH\u00d4NG TIN LI\u00caN H\u1ec6\n\n\u0110\u1ec3 \u0111\u01b0\u1ee3c t\u01b0 v\u1ea5n th\u00eam ho\u1eb7c s\u1eafp x\u1ebfp bu\u1ed5i demo, vui l\u00f2ng li\u00ean h\u1ec7:\n\n**Chuy\u00ean gia t\u01b0 v\u1ea5n d\u1ef1 \u00e1n:**  \nEmail: nguyenquanghuy.utc@gmail.com  \nZalo/Phone: *(c\u1eadp nh\u1eadt khi g\u1eedi proposal th\u1ef1c t\u1ebf)*\n\n---\n\n*Proposal n\u00e0y \u0111\u01b0\u1ee3c chu\u1ea9n b\u1ecb ri\u00eang cho doanh nghi\u1ec7p B\u0110S c\u00f4ng nghi\u1ec7p v\u1edbi quy m\u00f4 10 sale + 2 k\u1ebf to\u00e1n. M\u1ecdi th\u00f4ng tin trong t\u00e0i li\u1ec7u n\u00e0y l\u00e0 b\u1ea3o m\u1eadt v\u00e0 ch\u1ec9 ph\u1ee5c v\u1ee5 m\u1ee5c \u0111\u00edch \u0111\u00e1nh gi\u00e1.*\n\n*Hi\u1ec7u l\u1ef1c b\u00e1o gi\u00e1: 30 ng\u00e0y k\u1ec3 t\u1eeb ng\u00e0y 17/05/2026*\n\n---\n*Phi\u00ean b\u1ea3n t\u00e0i li\u1ec7u: v1.0 | Ng\u00e0y ph\u00e1t h\u00e0nh: 17/05/2026*\n"}], "grading": {"eval_id": 3, "config": "with_skill", "assertions": [{"text": "2-3 packages", "passed": true, "evidence": "Found 'basic'"}, {"text": "specific price numbers", "passed": true, "evidence": "Found '45.000.000'"}, {"text": "timeline by week/phase", "passed": true, "evidence": "Found 'tu\u1ea7n 1'"}, {"text": "scope of work", "passed": true, "evidence": "Found 'ph\u1ea1m vi'"}, {"text": "support/warranty terms", "passed": true, "evidence": "Found 'b\u1ea3o h\u00e0nh'"}]}}, {"id": "eval-3-proposal-without_skill", "prompt": "T\u00f4i c\u1ea7n t\u1ea1o proposal v\u00e0 b\u00e1o gi\u00e1 \u0111\u1ec3 ch\u00e0o h\u00e0ng cho m\u1ed9t c\u00f4ng ty B\u0110S c\u00f4ng nghi\u1ec7p mu\u1ed1n x\u00e2y d\u1ef1ng h\u1ec7 th\u1ed1ng qu\u1ea3n l\u00fd giao d\u1ecbch tr\u00ean AppSheet. H\u1ecd c\u00f3 kho\u1ea3ng 10 sale, 2 k\u1ebf to\u00e1n. L\u00e0m proposal chuy\u00ean nghi\u1ec7p.", "eval_id": 3, "outputs": [{"name": "response.md", "type": "text", "content": "# PROPOSAL & B\u00c1O GI\u00c1\n## H\u1ec7 Th\u1ed1ng Qu\u1ea3n L\u00fd Giao D\u1ecbch B\u1ea5t \u0110\u1ed9ng S\u1ea3n C\u00f4ng Nghi\u1ec7p tr\u00ean AppSheet\n\n---\n\n**K\u00ednh g\u1eedi:** Ban L\u00e3nh \u0110\u1ea1o [T\u00ean C\u00f4ng Ty B\u0110S]\n\n**Ng\u00e0y:** 17/05/2026\n\n**Ng\u01b0\u1eddi l\u1eadp:** [T\u00ean \u0111\u01a1n v\u1ecb t\u01b0 v\u1ea5n / ph\u00e1t tri\u1ec3n]\n\n**M\u00e3 s\u1ed1 \u0111\u1ec1 xu\u1ea5t:** PROP-2026-BDSCN-001\n\n---\n\n## M\u1ee4C L\u1ee4C\n\n1. T\u00f3m t\u1eaft \u0111i\u1ec1u h\u00e0nh\n2. Ph\u00e2n t\u00edch nhu c\u1ea7u & b\u00e0i to\u00e1n\n3. Gi\u1ea3i ph\u00e1p \u0111\u1ec1 xu\u1ea5t\n4. Ph\u1ea1m vi c\u00f4ng vi\u1ec7c & t\u00ednh n\u0103ng h\u1ec7 th\u1ed1ng\n5. Ki\u1ebfn tr\u00fac h\u1ec7 th\u1ed1ng\n6. L\u1ed9 tr\u00ecnh tri\u1ec3n khai\n7. B\u00e1o gi\u00e1 chi ti\u1ebft\n8. \u0110i\u1ec1u kho\u1ea3n & \u0111i\u1ec1u ki\u1ec7n\n9. V\u1ec1 \u0111\u01a1n v\u1ecb th\u1ef1c hi\u1ec7n\n\n---\n\n## 1. T\u00d3M T\u1eaeT \u0110I\u1ec0U H\u00c0NH\n\nCh\u00fang t\u00f4i tr\u00e2n tr\u1ecdng g\u1eedi \u0111\u1ebfn [T\u00ean C\u00f4ng Ty B\u0110S] \u0111\u1ec1 xu\u1ea5t x\u00e2y d\u1ef1ng **H\u1ec7 Th\u1ed1ng Qu\u1ea3n L\u00fd Giao D\u1ecbch B\u1ea5t \u0110\u1ed9ng S\u1ea3n C\u00f4ng Nghi\u1ec7p** tr\u00ean n\u1ec1n t\u1ea3ng AppSheet \u2014 m\u1ed9t gi\u1ea3i ph\u00e1p no-code/low-code ti\u00ean ti\u1ebfn c\u1ee7a Google, \u0111\u01b0\u1ee3c thi\u1ebft k\u1ebf \u0111\u1eb7c bi\u1ec7t \u0111\u1ec3 \u0111\u00e1p \u1ee9ng nhu c\u1ea7u v\u1eadn h\u00e0nh c\u1ee7a \u0111\u1ed9i ng\u0169 **10 sale** v\u00e0 **2 k\u1ebf to\u00e1n**.\n\nH\u1ec7 th\u1ed1ng s\u1ebd s\u1ed1 h\u00f3a to\u00e0n b\u1ed9 quy tr\u00ecnh t\u1eeb ti\u1ebfp nh\u1eadn kh\u00e1ch h\u00e0ng, qu\u1ea3n l\u00fd d\u1ef1 \u00e1n/l\u00f4 \u0111\u1ea5t, theo d\u00f5i giao d\u1ecbch, \u0111\u1ebfn b\u00e1o c\u00e1o doanh thu v\u00e0 ki\u1ec3m so\u00e1t hoa h\u1ed3ng \u2014 gi\u00fap c\u00f4ng ty n\u00e2ng cao hi\u1ec7u su\u1ea5t l\u00e0m vi\u1ec7c, gi\u1ea3m thi\u1ec3u sai s\u00f3t th\u1ee7 c\u00f4ng v\u00e0 c\u00f3 c\u00e1i nh\u00ecn to\u00e0n di\u1ec7n, t\u1ee9c th\u1eddi v\u1ec1 hi\u1ec7u qu\u1ea3 kinh doanh.\n\n**\u0110i\u1ec3m n\u1ed5i b\u1eadt c\u1ee7a gi\u1ea3i ph\u00e1p:**\n- Tri\u1ec3n khai nhanh: 6\u20138 tu\u1ea7n\n- Chi ph\u00ed h\u1ee3p l\u00fd, kh\u00f4ng c\u1ea7n \u0111\u1ea7u t\u01b0 h\u1ea1 t\u1ea7ng server\n- Ho\u1ea1t \u0111\u1ed9ng tr\u00ean mobile (iOS/Android) v\u00e0 desktop\n- D\u1eef li\u1ec7u l\u01b0u tr\u1eef an to\u00e0n tr\u00ean Google Workspace\n- D\u1ec5 m\u1edf r\u1ed9ng khi c\u00f4ng ty ph\u00e1t tri\u1ec3n\n\n---\n\n## 2. PH\u00c2N T\u00cdCH NHU C\u1ea6U & B\u00c0I TO\u00c1N\n\n### 2.1 Th\u1ef1c tr\u1ea1ng ph\u1ed5 bi\u1ebfn c\u1ee7a c\u00f4ng ty B\u0110S c\u00f4ng nghi\u1ec7p\n\nQua qu\u00e1 tr\u00ecnh t\u00ecm hi\u1ec3u, ch\u00fang t\u00f4i nh\u1eadn th\u1ea5y c\u00e1c c\u00f4ng ty B\u0110S c\u00f4ng nghi\u1ec7p th\u01b0\u1eddng g\u1eb7p ph\u1ea3i nh\u1eefng th\u00e1ch th\u1ee9c sau:\n\n| V\u1ea5n \u0111\u1ec1 | H\u1eadu qu\u1ea3 |\n|--------|---------|\n| Qu\u1ea3n l\u00fd th\u00f4ng tin kh\u00e1ch h\u00e0ng ph\u00e2n t\u00e1n (Excel, Zalo, ghi ch\u00fa) | M\u1ea5t kh\u00e1ch, tr\u00f9ng l\u1eb7p d\u1eef li\u1ec7u |\n| Thi\u1ebfu h\u1ec7 th\u1ed1ng theo d\u00f5i ti\u1ebfn \u0111\u1ed9 giao d\u1ecbch | Giao d\u1ecbch \"r\u01a1i\" gi\u1eefa c\u00e1c b\u01b0\u1edbc |\n| T\u00ednh hoa h\u1ed3ng th\u1ee7 c\u00f4ng, d\u1ec5 nh\u1ea7m l\u1eabn | Tranh ch\u1ea5p n\u1ed9i b\u1ed9, m\u1ea5t uy t\u00edn |\n| B\u00e1o c\u00e1o doanh thu t\u1ed1n th\u1eddi gian, kh\u00f4ng real-time | L\u00e3nh \u0111\u1ea1o thi\u1ebfu th\u00f4ng tin ra quy\u1ebft \u0111\u1ecbnh |\n| Qu\u1ea3n l\u00fd qu\u1ef9 \u0111\u1ea5t/nh\u00e0 x\u01b0\u1edfng kh\u00f4ng c\u1eadp nh\u1eadt | Sale b\u00e1o sai t\u00ecnh tr\u1ea1ng cho kh\u00e1ch |\n| K\u1ebf to\u00e1n kh\u00f4ng c\u00f3 \u0111\u1ea7y \u0111\u1ee7 h\u1ed3 s\u01a1 giao d\u1ecbch | Ch\u1eadm tr\u1ec5 xu\u1ea5t h\u00f3a \u0111\u01a1n, theo d\u00f5i c\u00f4ng n\u1ee3 |\n\n### 2.2 \u0110\u1eb7c th\u00f9 B\u0110S c\u00f4ng nghi\u1ec7p c\u1ea7n l\u01b0u \u00fd\n\n- Gi\u00e1 tr\u1ecb giao d\u1ecbch l\u1edbn (t\u1ef7 \u0111\u1ed3ng/USD), quy tr\u00ecnh ph\u00ea duy\u1ec7t nhi\u1ec1u c\u1ea5p\n- Kh\u00e1ch h\u00e0ng th\u01b0\u1eddng l\u00e0 doanh nghi\u1ec7p FDI, c\u1ea7n h\u1ed3 s\u01a1 ph\u00e1p l\u00fd ph\u1ee9c t\u1ea1p\n- Giao d\u1ecbch k\u00e9o d\u00e0i (3\u201318 th\u00e1ng), c\u1ea7n theo d\u00f5i nhi\u1ec1u m\u1ed1c quan tr\u1ecdng\n- Hoa h\u1ed3ng c\u00f3 th\u1ec3 chia nhi\u1ec1u \u0111\u1ea7u (sale ch\u1ee7 qu\u1ea3n, sale h\u1ed7 tr\u1ee3, gi\u1edbi thi\u1ec7u)\n- Qu\u1ef9 \u0111\u1ea5t/nh\u00e0 x\u01b0\u1edfng cho thu\u00ea l\u1eabn b\u00e1n, c\u1ea7n ph\u00e2n lo\u1ea1i r\u00f5 r\u00e0ng\n\n---\n\n## 3. GI\u1ea2I PH\u00c1P \u0110\u1ec0 XU\u1ea4T\n\n### 3.1 T\u1ea1i sao AppSheet?\n\n**AppSheet** l\u00e0 n\u1ec1n t\u1ea3ng ph\u00e1t tri\u1ec3n \u1ee9ng d\u1ee5ng no-code c\u1ee7a Google, ph\u00f9 h\u1ee3p ho\u00e0n h\u1ea3o v\u1edbi quy m\u00f4 v\u00e0 nhu c\u1ea7u c\u1ee7a c\u00f4ng ty:\n\n| Ti\u00eau ch\u00ed | AppSheet | Ph\u1ea7n m\u1ec1m truy\u1ec1n th\u1ed1ng |\n|----------|----------|----------------------|\n| Chi ph\u00ed tri\u1ec3n khai | Th\u1ea5p | Cao (custom software) |\n| Th\u1eddi gian ra m\u1eaft | 6\u20138 tu\u1ea7n | 6\u201312 th\u00e1ng |\n| B\u1ea3o tr\u00ec | \u0110\u01a1n gi\u1ea3n, t\u1ef1 ch\u1ec9nh s\u1eeda | Ph\u1ee5 thu\u1ed9c nh\u00e0 cung c\u1ea5p |\n| T\u00edch h\u1ee3p Google Workspace | Ho\u00e0n h\u1ea3o | Ph\u1ee9c t\u1ea1p |\n| Mobile-first | C\u00f3 | Tu\u1ef3 ch\u1ecdn |\n| Ph\u00f9 h\u1ee3p 10\u201350 ng\u01b0\u1eddi | T\u1ed1i \u01b0u | Qu\u00e1 l\u1edbn/ph\u1ee9c t\u1ea1p |\n\n### 3.2 Ki\u1ebfn tr\u00fac t\u1ed5ng th\u1ec3\n\n```\n[Google Sheets / Google Drive]  \u2190 N\u1ec1n t\u1ea3ng l\u01b0u tr\u1eef d\u1eef li\u1ec7u\n         \u2195\n    [AppSheet App]\n    \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n    \u2502  Module 1: Qu\u1ea3n l\u00fd Kh\u00e1ch h\u00e0ng  \u2502\n    \u2502  Module 2: Qu\u1ea3n l\u00fd Qu\u1ef9 \u0111\u1ea5t     \u2502\n    \u2502  Module 3: Qu\u1ea3n l\u00fd Giao d\u1ecbch   \u2502\n    \u2502  Module 4: Hoa h\u1ed3ng & T\u00e0i ch\u00ednh\u2502\n    \u2502  Module 5: B\u00e1o c\u00e1o & Dashboard  \u2502\n    \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n         \u2195\n[Email / Google Chat Notifications]\n```\n\n---\n\n## 4. PH\u1ea0M VI C\u00d4NG VI\u1ec6C & T\u00cdNH N\u0102NG H\u1ec6 TH\u1ed0NG\n\n### MODULE 1: QU\u1ea2N L\u00dd KH\u00c1CH H\u00c0NG (CRM)\n\n**D\u00e0nh cho:** Sale, Qu\u1ea3n l\u00fd\n\n**T\u00ednh n\u0103ng:**\n- T\u1ea1o & qu\u1ea3n l\u00fd h\u1ed3 s\u01a1 kh\u00e1ch h\u00e0ng (c\u00e1 nh\u00e2n/doanh nghi\u1ec7p)\n- Ph\u00e2n lo\u1ea1i: kh\u00e1ch ti\u1ec1m n\u0103ng, \u0111ang t\u01b0 v\u1ea5n, \u0111\u00e3 giao d\u1ecbch\n- L\u1ecbch s\u1eed li\u00ean l\u1ea1c, ghi ch\u00fa cu\u1ed9c g\u1ecdi/email\n- Ph\u00e2n c\u00f4ng kh\u00e1ch h\u00e0ng cho t\u1eebng sale\n- C\u1ea3nh b\u00e1o follow-up t\u1ef1 \u0111\u1ed9ng (nh\u1eafc nh\u1edf khi qu\u00e1 X ng\u00e0y ch\u01b0a li\u00ean h\u1ec7)\n- T\u00ecm ki\u1ebfm & l\u1ecdc theo ng\u00e0nh ngh\u1ec1, quy m\u00f4, nhu c\u1ea7u di\u1ec7n t\u00edch\n- Upload t\u00e0i li\u1ec7u kh\u00e1ch h\u00e0ng (NDA, h\u1ed3 s\u01a1 ph\u00e1p l\u00fd doanh nghi\u1ec7p)\n\n**Fields quan tr\u1ecdng:**\n- T\u00ean c\u00f4ng ty, MST, \u0111\u1ecba ch\u1ec9, ng\u00e0nh ngh\u1ec1\n- Ng\u01b0\u1eddi li\u00ean h\u1ec7, ch\u1ee9c v\u1ee5, s\u1ed1 \u0111i\u1ec7n tho\u1ea1i, email\n- Nhu c\u1ea7u: lo\u1ea1i B\u0110S, di\u1ec7n t\u00edch, khu c\u00f4ng nghi\u1ec7p m\u1ee5c ti\u00eau, ng\u00e2n s\u00e1ch\n- Ngu\u1ed3n kh\u00e1ch h\u00e0ng (referral, website, cold call, event)\n- M\u1ee9c \u0111\u1ed9 \u01b0u ti\u00ean (Hot/Warm/Cold)\n\n---\n\n### MODULE 2: QU\u1ea2N L\u00dd QU\u1ef8 \u0110\u1ea4T & NH\u00c0 X\u01af\u1edeNG\n\n**D\u00e0nh cho:** Sale, Qu\u1ea3n l\u00fd, K\u1ebf to\u00e1n (xem)\n\n**T\u00ednh n\u0103ng:**\n- Danh m\u1ee5c to\u00e0n b\u1ed9 b\u1ea5t \u0111\u1ed9ng s\u1ea3n \u0111ang ch\u00e0o b\u00e1n/cho thu\u00ea\n- Ph\u00e2n lo\u1ea1i: \u0111\u1ea5t KCN, nh\u00e0 x\u01b0\u1edfng x\u00e2y s\u1eb5n, nh\u00e0 x\u01b0\u1edfng x\u00e2y theo y\u00eau c\u1ea7u\n- Tr\u1ea1ng th\u00e1i: C\u00f2n tr\u1ed1ng / \u0110ang \u0111\u1eb7t c\u1ecdc / \u0110\u00e3 b\u00e1n / \u0110ang cho thu\u00ea\n- Upload b\u1ea3n \u0111\u1ed3, \u1ea3nh, t\u00e0i li\u1ec7u ph\u00e1p l\u00fd t\u1eebng l\u00f4\n- L\u1ecbch s\u1eed giao d\u1ecbch theo t\u1eebng l\u00f4 \u0111\u1ea5t\n- C\u1ea3nh b\u00e1o khi \u0111\u1eb7t c\u1ecdc/h\u1ee3p \u0111\u1ed3ng s\u1eafp h\u1ebft h\u1ea1n\n\n**Fields quan tr\u1ecdng:**\n- M\u00e3 l\u00f4, t\u00ean d\u1ef1 \u00e1n, khu c\u00f4ng nghi\u1ec7p\n- Di\u1ec7n t\u00edch \u0111\u1ea5t, di\u1ec7n t\u00edch x\u00e2y d\u1ef1ng\n- Gi\u00e1 b\u00e1n/cho thu\u00ea (USD/m\u00b2 ho\u1eb7c VND)\n- Th\u1eddi h\u1ea1n s\u1eed d\u1ee5ng \u0111\u1ea5t c\u00f2n l\u1ea1i\n- Ch\u1ee7 s\u1edf h\u1eefu/\u0111\u01a1n v\u1ecb qu\u1ea3n l\u00fd\n- \u0110\u1eb7c \u0111i\u1ec3m k\u1ef9 thu\u1eadt (\u0111i\u1ec7n, n\u01b0\u1edbc, PCCC, cao \u0111\u1ed9 n\u1ec1n...)\n\n---\n\n### MODULE 3: QU\u1ea2N L\u00dd GIAO D\u1ecaCH\n\n**D\u00e0nh cho:** Sale, Qu\u1ea3n l\u00fd, K\u1ebf to\u00e1n\n\n**T\u00ednh n\u0103ng:**\n- T\u1ea1o giao d\u1ecbch, li\u00ean k\u1ebft v\u1edbi kh\u00e1ch h\u00e0ng + B\u0110S\n- Pipeline tr\u1ef1c quan: 7 giai \u0111o\u1ea1n giao d\u1ecbch\n- Upload & l\u01b0u tr\u1eef h\u1ee3p \u0111\u1ed3ng, bi\u00ean b\u1ea3n\n- Theo d\u00f5i m\u1ed1c th\u1eddi gian quan tr\u1ecdng\n- Ph\u00ea duy\u1ec7t nhi\u1ec1u c\u1ea5p (Sale \u2192 Tr\u01b0\u1edfng ph\u00f2ng \u2192 Gi\u00e1m \u0111\u1ed1c)\n- C\u1ea3nh b\u00e1o deadline t\u1ef1 \u0111\u1ed9ng qua email/notification\n- L\u1ecbch s\u1eed thay \u0111\u1ed5i tr\u1ea1ng th\u00e1i (audit trail)\n\n**7 Giai \u0111o\u1ea1n Pipeline:**\n1. Kh\u1ea3o s\u00e1t nhu c\u1ea7u\n2. Gi\u1edbi thi\u1ec7u B\u0110S / \u0110i xem th\u1ef1c \u0111\u1ecba\n3. \u0110\u00e0m ph\u00e1n \u0111i\u1ec1u kho\u1ea3n\n4. \u0110\u1eb7t c\u1ecdc / LOI (Letter of Intent)\n5. K\u00fd h\u1ee3p \u0111\u1ed3ng ch\u00ednh th\u1ee9c\n6. Thanh to\u00e1n & B\u00e0n giao\n7. Ho\u00e0n t\u1ea5t / H\u1eadu m\u00e3i\n\n**Fields quan tr\u1ecdng:**\n- M\u00e3 giao d\u1ecbch (t\u1ef1 sinh)\n- Sale ph\u1ee5 tr\u00e1ch, sale h\u1ed7 tr\u1ee3\n- Gi\u00e1 tr\u1ecb giao d\u1ecbch (b\u00e1n/thu\u00ea)\n- Lo\u1ea1i giao d\u1ecbch: Mua b\u00e1n / Cho thu\u00ea\n- Th\u1eddi h\u1ea1n h\u1ee3p \u0111\u1ed3ng thu\u00ea (n\u1ebfu c\u00f3)\n- Ng\u00e0y d\u1ef1 ki\u1ebfn k\u00fd h\u1ee3p \u0111\u1ed3ng\n- Ghi ch\u00fa \u0111\u00e0m ph\u00e1n\n\n---\n\n### MODULE 4: HOA H\u1ed2NG & T\u00c0I CH\u00cdNH\n\n**D\u00e0nh cho:** K\u1ebf to\u00e1n, Qu\u1ea3n l\u00fd, Sale (xem ph\u1ea7n c\u1ee7a m\u00ecnh)\n\n**T\u00ednh n\u0103ng:**\n- T\u1ef1 \u0111\u1ed9ng t\u00ednh hoa h\u1ed3ng d\u1ef1a tr\u00ean quy t\u1eafc \u0111\u00e3 c\u1ea5u h\u00ecnh\n- H\u1ed7 tr\u1ee3 chia hoa h\u1ed3ng nhi\u1ec1u \u0111\u1ea7u (% t\u00f9y ch\u1ec9nh theo t\u1eebng giao d\u1ecbch)\n- Theo d\u00f5i ti\u1ebfn \u0111\u1ed9 thanh to\u00e1n hoa h\u1ed3ng cho t\u1eebng sale\n- Qu\u1ea3n l\u00fd thu ti\u1ec1n t\u1eeb kh\u00e1ch h\u00e0ng (\u0111\u1eb7t c\u1ecdc, t\u1eebng \u0111\u1ee3t thanh to\u00e1n)\n- Xu\u1ea5t b\u1ea3ng t\u1ed5ng h\u1ee3p hoa h\u1ed3ng theo th\u00e1ng/qu\u00fd\n- C\u1ea3nh b\u00e1o c\u00f4ng n\u1ee3 qu\u00e1 h\u1ea1n\n\n**C\u1ea5u tr\u00fac hoa h\u1ed3ng c\u00f3 th\u1ec3 c\u1ea5u h\u00ecnh:**\n- % hoa h\u1ed3ng tr\u00ean gi\u00e1 tr\u1ecb giao d\u1ecbch\n- Ph\u00e2n chia: Sale ch\u1ee7 qu\u1ea3n / Sale h\u1ed7 tr\u1ee3 / Gi\u1edbi thi\u1ec7u n\u1ed9i b\u1ed9 / C\u00f4ng ty\n- Hoa h\u1ed3ng tr\u1ea3 theo t\u1eebng \u0111\u1ee3t thu ti\u1ec1n c\u1ee7a kh\u00e1ch\n\n**Theo d\u00f5i thanh to\u00e1n:**\n- L\u1ecbch thanh to\u00e1n (payment schedule)\n- S\u1ed1 ti\u1ec1n \u0111\u00e3 thu / c\u00f2n l\u1ea1i\n- Ng\u00e0y \u0111\u1ebfn h\u1ea1n t\u1eebng \u0111\u1ee3t\n- Tr\u1ea1ng th\u00e1i: Ch\u01b0a \u0111\u1ebfn h\u1ea1n / \u0110\u1ebfn h\u1ea1n / Qu\u00e1 h\u1ea1n / \u0110\u00e3 thu\n\n---\n\n### MODULE 5: B\u00c1O C\u00c1O & DASHBOARD\n\n**D\u00e0nh cho:** Qu\u1ea3n l\u00fd, K\u1ebf to\u00e1n\n\n**Dashboard Realtime:**\n- T\u1ed5ng giao d\u1ecbch theo th\u00e1ng (s\u1ed1 l\u01b0\u1ee3ng & gi\u00e1 tr\u1ecb)\n- Doanh thu th\u1ef1c hi\u1ec7n vs. k\u1ebf ho\u1ea1ch\n- Pipeline hi\u1ec7n t\u1ea1i (s\u1ed1 giao d\u1ecbch \u1edf t\u1eebng giai \u0111o\u1ea1n)\n- Top sale theo doanh s\u1ed1\n- Qu\u1ef9 \u0111\u1ea5t c\u00f2n tr\u1ed1ng theo khu c\u00f4ng nghi\u1ec7p\n\n**B\u00e1o c\u00e1o xu\u1ea5t \u0111\u01b0\u1ee3c:**\n- B\u00e1o c\u00e1o doanh s\u1ed1 theo sale (tu\u1ea7n/th\u00e1ng/qu\u00fd)\n- B\u00e1o c\u00e1o hoa h\u1ed3ng ph\u1ea3i tr\u1ea3\n- B\u00e1o c\u00e1o c\u00f4ng n\u1ee3 kh\u00e1ch h\u00e0ng\n- B\u00e1o c\u00e1o t\u00ecnh tr\u1ea1ng qu\u1ef9 \u0111\u1ea5t\n- B\u00e1o c\u00e1o pipeline theo giai \u0111o\u1ea1n\n\n---\n\n### PH\u00c2N QUY\u1ec0N H\u1ec6 TH\u1ed0NG\n\n| Vai tr\u00f2 | Quy\u1ec1n truy c\u1eadp |\n|---------|----------------|\n| **Sale** | Xem/s\u1eeda kh\u00e1ch h\u00e0ng & giao d\u1ecbch c\u1ee7a m\u00ecnh, xem qu\u1ef9 \u0111\u1ea5t, xem hoa h\u1ed3ng c\u1ee7a m\u00ecnh |\n| **Tr\u01b0\u1edfng ph\u00f2ng Sale** | T\u1ea5t c\u1ea3 c\u1ee7a Sale + xem to\u00e0n b\u1ed9 team, ph\u00ea duy\u1ec7t giao d\u1ecbch |\n| **K\u1ebf to\u00e1n** | Xem giao d\u1ecbch \u0111\u00e3 \u0111\u01b0\u1ee3c duy\u1ec7t, qu\u1ea3n l\u00fd thanh to\u00e1n, hoa h\u1ed3ng, b\u00e1o c\u00e1o t\u00e0i ch\u00ednh |\n| **Gi\u00e1m \u0111\u1ed1c / Admin** | To\u00e0n quy\u1ec1n, xem t\u1ea5t c\u1ea3 dashboard, ph\u00ea duy\u1ec7t c\u1ea5p cao |\n\n---\n\n## 5. KI\u1ebeN TR\u00daC H\u1ec6 TH\u1ed0NG\n\n### 5.1 H\u1ea1 t\u1ea7ng k\u1ef9 thu\u1eadt\n\n**N\u1ec1n t\u1ea3ng:** AppSheet (Google Cloud)\n**L\u01b0u tr\u1eef d\u1eef li\u1ec7u:** Google Sheets (c\u00f3 th\u1ec3 n\u00e2ng c\u1ea5p l\u00ean Google Cloud SQL)\n**T\u00e0i li\u1ec7u/File:** Google Drive\n**Email t\u1ef1 \u0111\u1ed9ng:** Gmail API / AppSheet Automation\n**X\u00e1c th\u1ef1c ng\u01b0\u1eddi d\u00f9ng:** Google Account (SSO)\n\n### 5.2 C\u1ea5u tr\u00fac d\u1eef li\u1ec7u (Google Sheets)\n\n```\nSheet 1: KhachHang         - H\u1ed3 s\u01a1 kh\u00e1ch h\u00e0ng\nSheet 2: BatDongSan        - Danh m\u1ee5c qu\u1ef9 \u0111\u1ea5t & nh\u00e0 x\u01b0\u1edfng\nSheet 3: GiaoDich          - Giao d\u1ecbch\nSheet 4: ChiTietThanhToan  - L\u1ecbch s\u1eed thanh to\u00e1n\nSheet 5: HoaHong           - B\u1ea3ng hoa h\u1ed3ng\nSheet 6: NguoiDung         - Danh s\u00e1ch user & ph\u00e2n quy\u1ec1n\nSheet 7: DanhMuc           - B\u1ea3ng m\u00e3 (KCN, lo\u1ea1i B\u0110S, ngu\u1ed3n KH...)\nSheet 8: LichSuHoatDong    - Audit log\n```\n\n### 5.3 T\u1ef1 \u0111\u1ed9ng h\u00f3a (Automations)\n\n- **T\u1ef1 \u0111\u1ed9ng th\u00f4ng b\u00e1o** khi giao d\u1ecbch chuy\u1ec3n giai \u0111o\u1ea1n\n- **Nh\u1eafc nh\u1edf follow-up** kh\u00e1ch h\u00e0ng sau X ng\u00e0y kh\u00f4ng li\u00ean h\u1ec7\n- **C\u1ea3nh b\u00e1o \u0111\u1ebfn h\u1ea1n** thanh to\u00e1n (tr\u01b0\u1edbc 3 ng\u00e0y, 1 ng\u00e0y)\n- **T\u1ef1 \u0111\u1ed9ng t\u00ednh hoa h\u1ed3ng** khi c\u1eadp nh\u1eadt tr\u1ea1ng th\u00e1i giao d\u1ecbch\n- **Email t\u00f3m t\u1eaft h\u00e0ng tu\u1ea7n** g\u1eedi cho qu\u1ea3n l\u00fd\n- **Th\u00f4ng b\u00e1o c\u00f3 giao d\u1ecbch m\u1edbi** c\u1ea7n ph\u00ea duy\u1ec7t\n\n---\n\n## 6. L\u1ed8 TR\u00ccNH TRI\u1ec2N KHAI\n\n### T\u1ed5ng th\u1eddi gian: 7 tu\u1ea7n\n\n| Tu\u1ea7n | Giai \u0111o\u1ea1n | C\u00f4ng vi\u1ec7c ch\u00ednh |\n|------|-----------|-----------------|\n| **Tu\u1ea7n 1** | Kh\u1ea3o s\u00e1t & thi\u1ebft k\u1ebf | Thu th\u1eadp y\u00eau c\u1ea7u chi ti\u1ebft, x\u00e1c nh\u1eadn quy tr\u00ecnh nghi\u1ec7p v\u1ee5, thi\u1ebft k\u1ebf c\u1ea5u tr\u00fac d\u1eef li\u1ec7u, prototype UI |\n| **Tu\u1ea7n 2\u20133** | Ph\u00e1t tri\u1ec3n core | Module KH, Qu\u1ef9 \u0111\u1ea5t, Giao d\u1ecbch c\u01a1 b\u1ea3n |\n| **Tu\u1ea7n 4** | Ph\u00e1t tri\u1ec3n finance | Module Hoa h\u1ed3ng, Thanh to\u00e1n, t\u1ef1 \u0111\u1ed9ng h\u00f3a |\n| **Tu\u1ea7n 5** | Dashboard & Reports | X\u00e2y d\u1ef1ng dashboard, b\u00e1o c\u00e1o, ph\u00e2n quy\u1ec1n |\n| **Tu\u1ea7n 6** | UAT & Training | Test v\u1edbi ng\u01b0\u1eddi d\u00f9ng th\u1ef1c, ch\u1ec9nh s\u1eeda, \u0111\u00e0o t\u1ea1o |\n| **Tu\u1ea7n 7** | Go-live & H\u1ed7 tr\u1ee3 | Tri\u1ec3n khai ch\u00ednh th\u1ee9c, nh\u1eadp d\u1eef li\u1ec7u ban \u0111\u1ea7u, h\u1ed7 tr\u1ee3 v\u1eadn h\u00e0nh |\n\n### Checkpoint & b\u00e0n giao:\n- **Cu\u1ed1i tu\u1ea7n 1:** T\u00e0i li\u1ec7u thi\u1ebft k\u1ebf c\u00f3 ch\u1eef k\u00fd x\u00e1c nh\u1eadn\n- **Cu\u1ed1i tu\u1ea7n 3:** Demo phi\u00ean b\u1ea3n beta, ph\u1ea3n h\u1ed3i l\u1ea7n 1\n- **Cu\u1ed1i tu\u1ea7n 5:** Demo \u0111\u1ea7y \u0111\u1ee7 t\u00ednh n\u0103ng, ph\u1ea3n h\u1ed3i l\u1ea7n 2\n- **Cu\u1ed1i tu\u1ea7n 7:** B\u00e0n giao ch\u00ednh th\u1ee9c, t\u00e0i li\u1ec7u h\u01b0\u1edbng d\u1eabn\n\n---\n\n## 7. B\u00c1O GI\u00c1 CHI TI\u1ebeT\n\n### 7.1 Chi ph\u00ed ph\u00e1t tri\u1ec3n (m\u1ed9t l\u1ea7n)\n\n| H\u1ea1ng m\u1ee5c | M\u00f4 t\u1ea3 | \u0110\u01a1n gi\u00e1 | S\u1ed1 l\u01b0\u1ee3ng | Th\u00e0nh ti\u1ec1n |\n|----------|-------|---------|---------|-----------|\n| **Kh\u1ea3o s\u00e1t & Thi\u1ebft k\u1ebf** | Thu th\u1eadp y\u00eau c\u1ea7u, v\u1ebd wireframe, thi\u1ebft k\u1ebf CSDL | 5.000.000\u0111 | 1 | 5.000.000\u0111 |\n| **Module Kh\u00e1ch h\u00e0ng (CRM)** | Ph\u00e1t tri\u1ec3n \u0111\u1ea7y \u0111\u1ee7 t\u00ednh n\u0103ng module KH | 8.000.000\u0111 | 1 | 8.000.000\u0111 |\n| **Module Qu\u1ea3n l\u00fd B\u0110S** | Qu\u1ef9 \u0111\u1ea5t, nh\u00e0 x\u01b0\u1edfng, tr\u1ea1ng th\u00e1i | 7.000.000\u0111 | 1 | 7.000.000\u0111 |\n| **Module Giao d\u1ecbch** | Pipeline 7 giai \u0111o\u1ea1n, ph\u00ea duy\u1ec7t, alert | 10.000.000\u0111 | 1 | 10.000.000\u0111 |\n| **Module Hoa h\u1ed3ng & T\u00e0i ch\u00ednh** | T\u00ednh hoa h\u1ed3ng, theo d\u00f5i thanh to\u00e1n | 10.000.000\u0111 | 1 | 10.000.000\u0111 |\n| **Dashboard & B\u00e1o c\u00e1o** | 5 dashboard, 6 lo\u1ea1i b\u00e1o c\u00e1o | 8.000.000\u0111 | 1 | 8.000.000\u0111 |\n| **Ph\u00e2n quy\u1ec1n & B\u1ea3o m\u1eadt** | C\u1ea5u h\u00ecnh role, row-level security | 3.000.000\u0111 | 1 | 3.000.000\u0111 |\n| **T\u1ef1 \u0111\u1ed9ng h\u00f3a (Automation)** | 6 lu\u1ed3ng t\u1ef1 \u0111\u1ed9ng, email notification | 5.000.000\u0111 | 1 | 5.000.000\u0111 |\n| **\u0110\u00e0o t\u1ea1o ng\u01b0\u1eddi d\u00f9ng** | \u0110\u00e0o t\u1ea1o 12 ng\u01b0\u1eddi (10 sale + 2 k\u1ebf to\u00e1n), t\u00e0i li\u1ec7u h\u01b0\u1edbng d\u1eabn | 4.000.000\u0111 | 1 | 4.000.000\u0111 |\n| **Nh\u1eadp d\u1eef li\u1ec7u ban \u0111\u1ea7u** | H\u1ed7 tr\u1ee3 migrate d\u1eef li\u1ec7u t\u1eeb Excel/file c\u0169 | 3.000.000\u0111 | 1 | 3.000.000\u0111 |\n| | | | **T\u1ed5ng ph\u00e1t tri\u1ec3n** | **63.000.000\u0111** |\n\n### 7.2 Chi ph\u00ed n\u1ec1n t\u1ea3ng AppSheet (h\u00e0ng th\u00e1ng/n\u0103m)\n\n| G\u00f3i | S\u1ed1 l\u01b0\u1ee3ng user | Gi\u00e1/user/th\u00e1ng | Chi ph\u00ed th\u00e1ng | Chi ph\u00ed n\u0103m |\n|-----|--------------|----------------|---------------|-------------|\n| AppSheet Core | 12 users | ~$10/user | ~$120/th\u00e1ng | ~$1.440/n\u0103m |\n| (t\u01b0\u01a1ng \u0111\u01b0\u01a1ng) | | | ~3.000.000\u0111/th\u00e1ng | ~36.000.000\u0111/n\u0103m |\n\n> L\u01b0u \u00fd: Gi\u00e1 AppSheet c\u00f3 th\u1ec3 thay \u0111\u1ed5i theo t\u1ef7 gi\u00e1 USD. Khuy\u1ebfn ngh\u1ecb k\u00fd g\u00f3i n\u0103m \u0111\u1ec3 ti\u1ebft ki\u1ec7m ~20%.\n\n### 7.3 Chi ph\u00ed b\u1ea3o tr\u00ec & h\u1ed7 tr\u1ee3 (t\u00f9y ch\u1ecdn)\n\n| G\u00f3i h\u1ed7 tr\u1ee3 | N\u1ed9i dung | Chi ph\u00ed/th\u00e1ng |\n|------------|----------|---------------|\n| **C\u01a1 b\u1ea3n** | S\u1eeda l\u1ed7i ph\u00e1t sinh, h\u1ed7 tr\u1ee3 k\u1ef9 thu\u1eadt qua chat (gi\u1edd h\u00e0nh ch\u00ednh) | 2.000.000\u0111 |\n| **Ti\u00eau chu\u1ea9n** | C\u01a1 b\u1ea3n + th\u00eam 2 t\u00ednh n\u0103ng nh\u1ecf/th\u00e1ng, \u0111\u00e0o t\u1ea1o user m\u1edbi | 4.000.000\u0111 |\n| **N\u00e2ng cao** | Ti\u00eau chu\u1ea9n + \u01b0u ti\u00ean 24/7, th\u00eam 4 t\u00ednh n\u0103ng/th\u00e1ng, b\u00e1o c\u00e1o t\u00f9y ch\u1ec9nh | 7.000.000\u0111 |\n\n### 7.4 T\u1ed4NG H\u1ee2P CHI PH\u00cd\n\n#### Ph\u01b0\u01a1ng \u00e1n 1: Tr\u1ecdn g\u00f3i n\u0103m \u0111\u1ea7u\n| Kho\u1ea3n m\u1ee5c | Gi\u00e1 tr\u1ecb |\n|-----------|---------|\n| Chi ph\u00ed ph\u00e1t tri\u1ec3n (m\u1ed9t l\u1ea7n) | **63.000.000\u0111** |\n| AppSheet license 12 users (1 n\u0103m) | **~36.000.000\u0111** |\n| G\u00f3i b\u1ea3o tr\u00ec Ti\u00eau chu\u1ea9n (1 n\u0103m) | **48.000.000\u0111** |\n| **T\u1ed5ng n\u0103m \u0111\u1ea7u** | **~147.000.000\u0111** |\n| **T\u1eeb n\u0103m th\u1ee9 2** (license + b\u1ea3o tr\u00ec) | **~84.000.000\u0111/n\u0103m** |\n\n#### Ph\u01b0\u01a1ng \u00e1n 2: T\u1ed1i thi\u1ec3u (kh\u00f4ng b\u1ea3o tr\u00ec)\n| Kho\u1ea3n m\u1ee5c | Gi\u00e1 tr\u1ecb |\n|-----------|---------|\n| Chi ph\u00ed ph\u00e1t tri\u1ec3n (m\u1ed9t l\u1ea7n) | **63.000.000\u0111** |\n| AppSheet license 12 users (1 n\u0103m) | **~36.000.000\u0111** |\n| **T\u1ed5ng n\u0103m \u0111\u1ea7u** | **~99.000.000\u0111** |\n\n### 7.5 \u0110i\u1ec1u ki\u1ec7n thanh to\u00e1n\n\n| \u0110\u1ee3t | Th\u1eddi \u0111i\u1ec3m | T\u1ef7 l\u1ec7 | Gi\u00e1 tr\u1ecb |\n|-----|-----------|-------|---------|\n| \u0110\u1ee3t 1 | K\u00fd h\u1ee3p \u0111\u1ed3ng | 40% | 25.200.000\u0111 |\n| \u0110\u1ee3t 2 | Ho\u00e0n th\u00e0nh demo beta (cu\u1ed1i tu\u1ea7n 3) | 30% | 18.900.000\u0111 |\n| \u0110\u1ee3t 3 | B\u00e0n giao ch\u00ednh th\u1ee9c (cu\u1ed1i tu\u1ea7n 7) | 30% | 18.900.000\u0111 |\n\n*(\u00c1p d\u1ee5ng cho ph\u1ea7n chi ph\u00ed ph\u00e1t tri\u1ec3n 63.000.000\u0111)*\n\n---\n\n## 8. \u0110I\u1ec0U KHO\u1ea2N & \u0110I\u1ec0U KI\u1ec6N\n\n### 8.1 B\u1ea3o h\u00e0nh\n- **Th\u1eddi gian b\u1ea3o h\u00e0nh:** 3 th\u00e1ng k\u1ec3 t\u1eeb ng\u00e0y b\u00e0n giao\n- **Ph\u1ea1m vi b\u1ea3o h\u00e0nh:** S\u1eeda l\u1ed7i ph\u00e1t sinh t\u1eeb qu\u00e1 tr\u00ecnh ph\u00e1t tri\u1ec3n (kh\u00f4ng bao g\u1ed3m thay \u0111\u1ed5i y\u00eau c\u1ea7u m\u1edbi)\n- **Th\u1eddi gian ph\u1ea3n h\u1ed3i l\u1ed7i:** Trong v\u00f2ng 24 gi\u1edd l\u00e0m vi\u1ec7c\n\n### 8.2 Quy\u1ec1n s\u1edf h\u1eefu & b\u1ea3o m\u1eadt d\u1eef li\u1ec7u\n- To\u00e0n b\u1ed9 d\u1eef li\u1ec7u thu\u1ed9c s\u1edf h\u1eefu c\u1ee7a **[T\u00ean C\u00f4ng Ty B\u0110S]**\n- D\u1eef li\u1ec7u \u0111\u01b0\u1ee3c l\u01b0u tr\u1eef tr\u00ean Google Workspace c\u1ee7a kh\u00e1ch h\u00e0ng\n- \u0110\u01a1n v\u1ecb ph\u00e1t tri\u1ec3n kh\u00f4ng l\u01b0u tr\u1eef d\u1eef li\u1ec7u kinh doanh c\u1ee7a kh\u00e1ch h\u00e0ng\n- K\u00fd NDA (Non-Disclosure Agreement) tr\u01b0\u1edbc khi b\u1eaft \u0111\u1ea7u d\u1ef1 \u00e1n\n\n### 8.3 Gi\u1edbi h\u1ea1n ph\u1ea1m vi\n- B\u00e1o gi\u00e1 tr\u00ean \u00e1p d\u1ee5ng cho t\u1ed1i \u0111a 12 users (10 sale + 2 k\u1ebf to\u00e1n)\n- N\u1ebfu c\u00f3 y\u00eau c\u1ea7u ph\u00e1t sinh ngo\u00e0i scope \u0111\u00e3 th\u1ed1ng nh\u1ea5t, s\u1ebd b\u00e1o gi\u00e1 b\u1ed5 sung\n- Thay \u0111\u1ed5i y\u00eau c\u1ea7u sau khi \u0111\u00e3 x\u00e1c nh\u1eadn thi\u1ebft k\u1ebf c\u00f3 th\u1ec3 \u1ea3nh h\u01b0\u1edfng \u0111\u1ebfn timeline v\u00e0 chi ph\u00ed\n\n### 8.4 Hi\u1ec7u l\u1ef1c b\u00e1o gi\u00e1\n- B\u00e1o gi\u00e1 c\u00f3 hi\u1ec7u l\u1ef1c trong v\u00f2ng **30 ng\u00e0y** k\u1ec3 t\u1eeb ng\u00e0y l\u1eadp\n- Sau th\u1eddi gian tr\u00ean, vui l\u00f2ng li\u00ean h\u1ec7 \u0111\u1ec3 c\u1eadp nh\u1eadt b\u00e1o gi\u00e1 m\u1edbi nh\u1ea5t\n\n### 8.5 \u0110i\u1ec1u ki\u1ec7n ti\u00ean quy\u1ebft t\u1eeb ph\u00eda kh\u00e1ch h\u00e0ng\n- Cung c\u1ea5p t\u00e0i kho\u1ea3n Google Workspace (ho\u1eb7c Gmail) cho to\u00e0n b\u1ed9 nh\u00e2n vi\u00ean\n- C\u1eed 1 ng\u01b0\u1eddi \u0111\u1ea7u m\u1ed1i (Project Owner) ph\u1ed1i h\u1ee3p xuy\u00ean su\u1ed1t d\u1ef1 \u00e1n\n- Ph\u1ea3n h\u1ed3i \u00fd ki\u1ebfn trong v\u00f2ng 3 ng\u00e0y l\u00e0m vi\u1ec7c t\u1ea1i m\u1ed7i checkpoint\n- Chu\u1ea9n b\u1ecb d\u1eef li\u1ec7u Excel/file hi\u1ec7n c\u00f3 \u0111\u1ec3 migrate v\u00e0o h\u1ec7 th\u1ed1ng m\u1edbi\n\n---\n\n## 9. V\u1ec0 \u0110\u01a0N V\u1eca TH\u1ef0C HI\u1ec6N\n\n### T\u1ea1i sao ch\u1ecdn ch\u00fang t\u00f4i?\n\n**[T\u00ean \u0111\u01a1n v\u1ecb ph\u00e1t tri\u1ec3n]** l\u00e0 \u0111\u01a1n v\u1ecb chuy\u00ean t\u01b0 v\u1ea5n v\u00e0 ph\u00e1t tri\u1ec3n gi\u1ea3i ph\u00e1p s\u1ed1 h\u00f3a cho doanh nghi\u1ec7p, v\u1edbi kinh nghi\u1ec7m \u0111\u1eb7c bi\u1ec7t trong l\u0129nh v\u1ef1c b\u1ea5t \u0111\u1ed9ng s\u1ea3n v\u00e0 AppSheet:\n\n- \u0110\u1ed9i ng\u0169 **AppSheet Certified Developer** \u0111\u01b0\u1ee3c Google ch\u1ee9ng nh\u1eadn\n- \u0110\u00e3 tri\u1ec3n khai h\u01a1n **[X] d\u1ef1 \u00e1n AppSheet** cho c\u00e1c c\u00f4ng ty B\u0110S, logistics, s\u1ea3n xu\u1ea5t\n- Hi\u1ec3u s\u00e2u nghi\u1ec7p v\u1ee5 B\u0110S c\u00f4ng nghi\u1ec7p (quy tr\u00ecnh giao d\u1ecbch, hoa h\u1ed3ng, ph\u00e1p l\u00fd)\n- H\u1ed7 tr\u1ee3 sau tri\u1ec3n khai b\u1eb1ng ti\u1ebfng Vi\u1ec7t, ph\u1ea3n h\u1ed3i nhanh\n\n### Tham kh\u1ea3o d\u1ef1 \u00e1n t\u01b0\u01a1ng t\u1ef1:\n- H\u1ec7 th\u1ed1ng CRM + Giao d\u1ecbch cho C\u00f4ng ty B\u0110S XYZ (8 sale, 1 k\u1ebf to\u00e1n) \u2014 2025\n- Qu\u1ea3n l\u00fd qu\u1ef9 \u0111\u1ea5t KCN cho C\u00f4ng ty ABC \u2014 2024\n- *(S\u1eb5n s\u00e0ng cung c\u1ea5p case study v\u00e0 demo theo y\u00eau c\u1ea7u)*\n\n---\n\n## L\u1edcI K\u1ebeT\n\nCh\u00fang t\u00f4i tin r\u1eb1ng gi\u1ea3i ph\u00e1p n\u00e0y s\u1ebd gi\u00fap **[T\u00ean C\u00f4ng Ty B\u0110S]** v\u1eadn h\u00e0nh hi\u1ec7u qu\u1ea3 h\u01a1n, gi\u1ea3m thi\u1ec3u r\u1ee7i ro th\u1ea5t tho\u00e1t giao d\u1ecbch v\u00e0 n\u00e2ng cao n\u0103ng l\u1ef1c c\u1ea1nh tranh trong l\u0129nh v\u1ef1c B\u0110S c\u00f4ng nghi\u1ec7p \u0111ang t\u0103ng tr\u01b0\u1edfng m\u1ea1nh t\u1ea1i Vi\u1ec7t Nam.\n\n**B\u01b0\u1edbc ti\u1ebfp theo \u0111\u01b0\u1ee3c \u0111\u1ec1 xu\u1ea5t:**\n1. S\u1eafp x\u1ebfp bu\u1ed5i h\u1ecdp tr\u00ecnh b\u00e0y/demo (30\u201345 ph\u00fat)\n2. K\u00fd NDA v\u00e0 h\u1ee3p \u0111\u1ed3ng nguy\u00ean t\u1eafc\n3. B\u1eaft \u0111\u1ea7u tu\u1ea7n kh\u1ea3o s\u00e1t thi\u1ebft k\u1ebf\n\n---\n\n**Li\u00ean h\u1ec7:**\n\n| | |\n|--|--|\n| **\u0110\u01a1n v\u1ecb:** | [T\u00ean c\u00f4ng ty ph\u00e1t tri\u1ec3n] |\n| **Ng\u01b0\u1eddi ph\u1ee5 tr\u00e1ch:** | [T\u00ean Account Manager] |\n| **\u0110i\u1ec7n tho\u1ea1i:** | [S\u1ed1 \u0111i\u1ec7n tho\u1ea1i] |\n| **Email:** | [Email] |\n| **Website:** | [Website] |\n\n---\n\n*T\u00e0i li\u1ec7u n\u00e0y mang t\u00ednh b\u1ea3o m\u1eadt, ch\u1ec9 d\u00e0nh cho [T\u00ean C\u00f4ng Ty B\u0110S]. Vui l\u00f2ng kh\u00f4ng chia s\u1ebb cho b\u00ean th\u1ee9 ba.*\n\n---\n\n**\u00a9 2026 [T\u00ean \u0111\u01a1n v\u1ecb ph\u00e1t tri\u1ec3n] \u2014 Chuy\u00ean gia gi\u1ea3i ph\u00e1p AppSheet cho Doanh nghi\u1ec7p**\n"}], "grading": {"eval_id": 3, "config": "without_skill", "assertions": [{"text": "2-3 packages", "passed": true, "evidence": "Found 'g\u00f3i'"}, {"text": "specific price numbers", "passed": false, "evidence": "Not found"}, {"text": "timeline by week/phase", "passed": true, "evidence": "Found 'tu\u1ea7n 1'"}, {"text": "scope of work", "passed": true, "evidence": "Found 'ph\u1ea1m vi'"}, {"text": "support/warranty terms", "passed": true, "evidence": "Found 'b\u1ea3o h\u00e0nh'"}]}}], "previous_feedback": {}, "previous_outputs": {}, "benchmark": {"runs": [{"eval_id": 1, "eval_name": "Pipeline Sale Design", "config": "with_skill", "pass_rate": 1.0, "passed": 5, "total": 5, "duration_seconds": 108.2, "total_tokens": 20182, "assertions": [{"text": "stage/status enum", "passed": true, "evidence": "Found 'quan t\u00e2m'"}, {"text": "table structure with columns", "passed": true, "evidence": "Found 'pipeline_sale'"}, {"text": "automation reminder", "passed": true, "evidence": "Found 'automation'"}, {"text": "security filter", "passed": true, "evidence": "Found 'security'"}, {"text": "mobile UX", "passed": true, "evidence": "Found 'mobile'"}]}, {"eval_id": 1, "eval_name": "Pipeline Sale Design", "config": "without_skill", "pass_rate": 1.0, "passed": 5, "total": 5, "duration_seconds": 103.2, "total_tokens": 15024, "assertions": [{"text": "stage/status enum", "passed": true, "evidence": "Found '\u0111\u00e0m ph\u00e1n'"}, {"text": "table structure with columns", "passed": true, "evidence": "Found 'column'"}, {"text": "automation reminder", "passed": true, "evidence": "Found 'automation'"}, {"text": "security filter", "passed": true, "evidence": "Found 'security'"}, {"text": "mobile UX", "passed": true, "evidence": "Found 'mobile'"}]}, {"eval_id": 2, "eval_name": "Database Structure Design", "config": "with_skill", "pass_rate": 1.0, "passed": 5, "total": 5, "duration_seconds": 137.1, "total_tokens": 22152, "assertions": [{"text": "3+ tables", "passed": true, "evidence": "Found 'nguon_dat'"}, {"text": "ref relationships", "passed": true, "evidence": "Found 'ref \u2192'"}, {"text": "key columns", "passed": true, "evidence": "Found 'key'"}, {"text": "status enum", "passed": true, "evidence": "Found 'enum'"}, {"text": "GPS/location", "passed": true, "evidence": "Found 'gps'"}]}, {"eval_id": 2, "eval_name": "Database Structure Design", "config": "without_skill", "pass_rate": 1.0, "passed": 5, "total": 5, "duration_seconds": 129.8, "total_tokens": 17751, "assertions": [{"text": "3+ tables", "passed": true, "evidence": "Found 'pipeline'"}, {"text": "ref relationships", "passed": true, "evidence": "Found 'ref \u2192'"}, {"text": "key columns", "passed": true, "evidence": "Found 'key'"}, {"text": "status enum", "passed": true, "evidence": "Found 'enum'"}, {"text": "GPS/location", "passed": true, "evidence": "Found 'gps'"}]}, {"eval_id": 3, "eval_name": "Proposal & Pricing", "config": "with_skill", "pass_rate": 1.0, "passed": 5, "total": 5, "duration_seconds": 179.8, "total_tokens": 25392, "assertions": [{"text": "2-3 packages", "passed": true, "evidence": "Found 'basic'"}, {"text": "specific price numbers", "passed": true, "evidence": "Found '45.000.000'"}, {"text": "timeline by week/phase", "passed": true, "evidence": "Found 'tu\u1ea7n 1'"}, {"text": "scope of work", "passed": true, "evidence": "Found 'ph\u1ea1m vi'"}, {"text": "support/warranty terms", "passed": true, "evidence": "Found 'b\u1ea3o h\u00e0nh'"}]}, {"eval_id": 3, "eval_name": "Proposal & Pricing", "config": "without_skill", "pass_rate": 0.8, "passed": 4, "total": 5, "duration_seconds": 152.2, "total_tokens": 18455, "assertions": [{"text": "2-3 packages", "passed": true, "evidence": "Found 'g\u00f3i'"}, {"text": "specific price numbers", "passed": false, "evidence": "Not found"}, {"text": "timeline by week/phase", "passed": true, "evidence": "Found 'tu\u1ea7n 1'"}, {"text": "scope of work", "passed": true, "evidence": "Found 'ph\u1ea1m vi'"}, {"text": "support/warranty terms", "passed": true, "evidence": "Found 'b\u1ea3o h\u00e0nh'"}]}], "summary": [{"config": "with_skill", "avg_pass_rate": 1.0, "avg_duration_seconds": 141.7, "avg_tokens": 22575}, {"config": "without_skill", "avg_pass_rate": 0.933, "avg_duration_seconds": 128.4, "avg_tokens": 17077}]}};
+
+    // ---- State ----
+    let feedbackMap = {};  // run_id -> feedback text
+    let currentIndex = 0;
+    let visitedRuns = new Set();
+
+    // ---- Init ----
+    async function init() {
+      // Load saved feedback from server — but only if this isn't a fresh
+      // iteration (indicated by previous_feedback being present). When
+      // previous feedback exists, the feedback.json on disk is stale from
+      // the prior iteration and should not pre-fill the textareas.
+      const hasPrevious = Object.keys(EMBEDDED_DATA.previous_feedback || {}).length > 0
+        || Object.keys(EMBEDDED_DATA.previous_outputs || {}).length > 0;
+      if (!hasPrevious) {
+        try {
+          const resp = await fetch("/api/feedback");
+          const data = await resp.json();
+          if (data.reviews) {
+            for (const r of data.reviews) feedbackMap[r.run_id] = r.feedback;
+          }
+        } catch { /* first run, no feedback yet */ }
+      }
+
+      document.getElementById("skill-name").textContent = EMBEDDED_DATA.skill_name;
+      showRun(0);
+
+      // Wire up feedback auto-save
+      const textarea = document.getElementById("feedback");
+      let saveTimeout = null;
+      textarea.addEventListener("input", () => {
+        clearTimeout(saveTimeout);
+        document.getElementById("feedback-status").textContent = "";
+        saveTimeout = setTimeout(() => saveCurrentFeedback(), 800);
+      });
+    }
+
+    // ---- Navigation ----
+    function navigate(delta) {
+      const newIndex = currentIndex + delta;
+      if (newIndex >= 0 && newIndex < EMBEDDED_DATA.runs.length) {
+        saveCurrentFeedback();
+        showRun(newIndex);
+      }
+    }
+
+    function updateNavButtons() {
+      document.getElementById("prev-btn").disabled = currentIndex === 0;
+      document.getElementById("next-btn").disabled =
+        currentIndex === EMBEDDED_DATA.runs.length - 1;
+    }
+
+    // ---- Show a run ----
+    function showRun(index) {
+      currentIndex = index;
+      const run = EMBEDDED_DATA.runs[index];
+
+      // Progress
+      document.getElementById("progress").textContent =
+        `${index + 1} of ${EMBEDDED_DATA.runs.length}`;
+
+      // Prompt
+      document.getElementById("prompt-text").textContent = run.prompt;
+
+      // Config badge
+      const badge = document.getElementById("config-badge");
+      const configMatch = run.id.match(/(with_skill|without_skill|new_skill|old_skill)/);
+      if (configMatch) {
+        const config = configMatch[1];
+        const isBaseline = config === "without_skill" || config === "old_skill";
+        badge.textContent = config.replace(/_/g, " ");
+        badge.className = "config-badge " + (isBaseline ? "config-baseline" : "config-primary");
+        badge.style.display = "inline-block";
+      } else {
+        badge.style.display = "none";
+      }
+
+      // Outputs
+      renderOutputs(run);
+
+      // Previous outputs
+      renderPrevOutputs(run);
+
+      // Grades
+      renderGrades(run);
+
+      // Previous feedback
+      const prevFb = (EMBEDDED_DATA.previous_feedback || {})[run.id];
+      const prevEl = document.getElementById("prev-feedback");
+      if (prevFb) {
+        document.getElementById("prev-feedback-text").textContent = prevFb;
+        prevEl.style.display = "block";
+      } else {
+        prevEl.style.display = "none";
+      }
+
+      // Feedback
+      document.getElementById("feedback").value = feedbackMap[run.id] || "";
+      document.getElementById("feedback-status").textContent = "";
+
+      updateNavButtons();
+
+      // Track visited runs and promote done button when all visited
+      visitedRuns.add(index);
+      const doneBtn = document.getElementById("done-btn");
+      if (visitedRuns.size >= EMBEDDED_DATA.runs.length) {
+        doneBtn.classList.add("ready");
+      }
+
+      // Scroll main content to top
+      document.querySelector(".main").scrollTop = 0;
+    }
+
+    // ---- Render outputs ----
+    function renderOutputs(run) {
+      const container = document.getElementById("outputs-body");
+      container.innerHTML = "";
+
+      const outputs = run.outputs || [];
+      if (outputs.length === 0) {
+        container.innerHTML = '<div class="empty-state">No output files</div>';
+        return;
+      }
+
+      for (const file of outputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        // Always show file header with download link
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const content = document.createElement("div");
+        content.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          content.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          content.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          content.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(content, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          content.appendChild(a);
+        } else if (file.type === "error") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          pre.style.color = "var(--red)";
+          content.appendChild(pre);
+        }
+
+        fileDiv.appendChild(content);
+        container.appendChild(fileDiv);
+      }
+    }
+
+    // ---- XLSX rendering via SheetJS ----
+    function renderXlsx(container, b64Data) {
+      try {
+        const raw = Uint8Array.from(atob(b64Data), c => c.charCodeAt(0));
+        const wb = XLSX.read(raw, { type: "array" });
+
+        for (let i = 0; i < wb.SheetNames.length; i++) {
+          const sheetName = wb.SheetNames[i];
+          const ws = wb.Sheets[sheetName];
+
+          if (wb.SheetNames.length > 1) {
+            const sheetLabel = document.createElement("div");
+            sheetLabel.style.cssText =
+              "font-weight:600; font-size:0.8rem; color:#b0aea5; margin-top:0.5rem; margin-bottom:0.25rem;";
+            sheetLabel.textContent = "Sheet: " + sheetName;
+            container.appendChild(sheetLabel);
+          }
+
+          const htmlStr = XLSX.utils.sheet_to_html(ws, { editable: false });
+          const wrapper = document.createElement("div");
+          wrapper.innerHTML = htmlStr;
+          container.appendChild(wrapper);
+        }
+      } catch (err) {
+        container.textContent = "Error rendering spreadsheet: " + err.message;
+      }
+    }
+
+    // ---- Grades ----
+    function renderGrades(run) {
+      const section = document.getElementById("grades-section");
+      const content = document.getElementById("grades-content");
+
+      if (!run.grading) {
+        section.style.display = "none";
+        return;
+      }
+
+      const grading = run.grading;
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("grades-arrow").classList.remove("open");
+
+      const summary = grading.summary || {};
+      const expectations = grading.expectations || [];
+
+      let html = '<div style="padding: 1rem;">';
+
+      // Summary line
+      const passRate = summary.pass_rate != null
+        ? Math.round(summary.pass_rate * 100) + "%"
+        : "?";
+      const badgeClass = summary.pass_rate >= 0.8 ? "grade-pass" : summary.pass_rate >= 0.5 ? "" : "grade-fail";
+      html += '<div class="grades-summary">';
+      html += '<span class="grade-badge ' + badgeClass + '">' + passRate + '</span>';
+      html += '<span>' + (summary.passed || 0) + ' passed, ' + (summary.failed || 0) + ' failed of ' + (summary.total || 0) + '</span>';
+      html += '</div>';
+
+      // Assertions list
+      html += '<ul class="assertion-list">';
+      for (const exp of expectations) {
+        const statusClass = exp.passed ? "pass" : "fail";
+        const statusIcon = exp.passed ? "\u2713" : "\u2717";
+        html += '<li class="assertion-item">';
+        html += '<span class="assertion-status ' + statusClass + '">' + statusIcon + '</span>';
+        html += '<span>' + escapeHtml(exp.text) + '</span>';
+        if (exp.evidence) {
+          html += '<div class="assertion-evidence">' + escapeHtml(exp.evidence) + '</div>';
+        }
+        html += '</li>';
+      }
+      html += '</ul>';
+
+      html += '</div>';
+      content.innerHTML = html;
+    }
+
+    function toggleGrades() {
+      const content = document.getElementById("grades-content");
+      const arrow = document.getElementById("grades-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Previous outputs (collapsible) ----
+    function renderPrevOutputs(run) {
+      const section = document.getElementById("prev-outputs-section");
+      const content = document.getElementById("prev-outputs-content");
+      const prevOutputs = (EMBEDDED_DATA.previous_outputs || {})[run.id];
+
+      if (!prevOutputs || prevOutputs.length === 0) {
+        section.style.display = "none";
+        return;
+      }
+
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("prev-outputs-arrow").classList.remove("open");
+
+      // Render the files into the content area
+      content.innerHTML = "";
+      const wrapper = document.createElement("div");
+      wrapper.style.padding = "1rem";
+
+      for (const file of prevOutputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const fc = document.createElement("div");
+        fc.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          fc.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          fc.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          fc.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(fc, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          fc.appendChild(a);
+        }
+
+        fileDiv.appendChild(fc);
+        wrapper.appendChild(fileDiv);
+      }
+
+      content.appendChild(wrapper);
+    }
+
+    function togglePrevOutputs() {
+      const content = document.getElementById("prev-outputs-content");
+      const arrow = document.getElementById("prev-outputs-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Feedback (saved to server -> feedback.json) ----
+    function saveCurrentFeedback() {
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // Build reviews array from map
+      const reviews = [];
+      for (const [run_id, feedback] of Object.entries(feedbackMap)) {
+        if (feedback.trim()) {
+          reviews.push({ run_id, feedback, timestamp: new Date().toISOString() });
+        }
+      }
+
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviews, status: "in_progress" }),
+      }).then(() => {
+        document.getElementById("feedback-status").textContent = "Saved";
+      }).catch(() => {
+        // Static mode or server unavailable — no-op on auto-save,
+        // feedback will be downloaded on final submit
+        document.getElementById("feedback-status").textContent = "Will download on submit";
+      });
+    }
+
+    // ---- Done ----
+    function showDoneDialog() {
+      // Save current textarea to feedbackMap (but don't POST yet)
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // POST once with status: complete — include ALL runs so the model
+      // can distinguish "no feedback" (looks good) from "not reviewed"
+      const reviews = [];
+      const ts = new Date().toISOString();
+      for (const r of EMBEDDED_DATA.runs) {
+        reviews.push({ run_id: r.id, feedback: feedbackMap[r.id] || "", timestamp: ts });
+      }
+      const payload = JSON.stringify({ reviews, status: "complete" }, null, 2);
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+      }).then(() => {
+        document.getElementById("done-overlay").classList.add("visible");
+      }).catch(() => {
+        // Server not available (static mode) — download as file
+        const blob = new Blob([payload], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "feedback.json";
+        a.click();
+        URL.revokeObjectURL(url);
+        document.getElementById("done-overlay").classList.add("visible");
+      });
+    }
+
+    function closeDoneDialog() {
+      // Reset status back to in_progress
+      saveCurrentFeedback();
+      document.getElementById("done-overlay").classList.remove("visible");
+    }
+
+    // ---- Toast ----
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("visible");
+      setTimeout(() => toast.classList.remove("visible"), 2000);
+    }
+
+    // ---- Keyboard nav ----
+    document.addEventListener("keydown", (e) => {
+      // Don't capture when typing in textarea
+      if (e.target.tagName === "TEXTAREA") return;
+
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        e.preventDefault();
+        navigate(-1);
+      } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        e.preventDefault();
+        navigate(1);
+      }
+    });
+
+    // ---- Util ----
+    function getDownloadUri(file) {
+      if (file.data_uri) return file.data_uri;
+      if (file.data_b64) return "data:application/octet-stream;base64," + file.data_b64;
+      if (file.type === "text") return "data:text/plain;charset=utf-8," + encodeURIComponent(file.content);
+      return "#";
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ---- View switching ----
+    function switchView(view) {
+      document.querySelectorAll(".view-tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".view-panel").forEach(p => p.classList.remove("active"));
+      document.querySelector(`[onclick="switchView('${view}')"]`).classList.add("active");
+      document.getElementById("panel-" + view).classList.add("active");
+    }
+
+    // ---- Benchmark rendering ----
+    function renderBenchmark() {
+      const data = EMBEDDED_DATA.benchmark;
+      if (!data) return;
+
+      // Show the tabs
+      document.getElementById("view-tabs").style.display = "flex";
+
+      const container = document.getElementById("benchmark-content");
+      const summary = data.run_summary || {};
+      const metadata = data.metadata || {};
+      const notes = data.notes || [];
+
+      let html = "";
+
+      // Header
+      html += "<h2 style='font-family: Poppins, sans-serif; margin-bottom: 0.5rem;'>Benchmark Results</h2>";
+      html += "<p style='color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.25rem;'>";
+      if (metadata.skill_name) html += "<strong>" + escapeHtml(metadata.skill_name) + "</strong> &mdash; ";
+      if (metadata.timestamp) html += metadata.timestamp + " &mdash; ";
+      if (metadata.evals_run) html += "Evals: " + metadata.evals_run.join(", ") + " &mdash; ";
+      html += (metadata.runs_per_configuration || "?") + " runs per configuration";
+      html += "</p>";
+
+      // Summary table
+      html += '<table class="benchmark-table">';
+
+      function fmtStat(stat, pct) {
+        if (!stat) return "—";
+        const suffix = pct ? "%" : "";
+        const m = pct ? (stat.mean * 100).toFixed(0) : stat.mean.toFixed(1);
+        const s = pct ? (stat.stddev * 100).toFixed(0) : stat.stddev.toFixed(1);
+        return m + suffix + " ± " + s + suffix;
+      }
+
+      function deltaClass(val) {
+        if (!val) return "";
+        const n = parseFloat(val);
+        if (n > 0) return "benchmark-delta-positive";
+        if (n < 0) return "benchmark-delta-negative";
+        return "";
+      }
+
+      // Discover config names dynamically (everything except "delta")
+      const configs = Object.keys(summary).filter(k => k !== "delta");
+      const configA = configs[0] || "config_a";
+      const configB = configs[1] || "config_b";
+      const labelA = configA.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const labelB = configB.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const a = summary[configA] || {};
+      const b = summary[configB] || {};
+      const delta = summary.delta || {};
+
+      html += "<thead><tr><th>Metric</th><th>" + escapeHtml(labelA) + "</th><th>" + escapeHtml(labelB) + "</th><th>Delta</th></tr></thead>";
+      html += "<tbody>";
+
+      html += "<tr><td><strong>Pass Rate</strong></td>";
+      html += "<td>" + fmtStat(a.pass_rate, true) + "</td>";
+      html += "<td>" + fmtStat(b.pass_rate, true) + "</td>";
+      html += '<td class="' + deltaClass(delta.pass_rate) + '">' + (delta.pass_rate || "—") + "</td></tr>";
+
+      // Time (only show row if data exists)
+      if (a.time_seconds || b.time_seconds) {
+        html += "<tr><td><strong>Time (s)</strong></td>";
+        html += "<td>" + fmtStat(a.time_seconds, false) + "</td>";
+        html += "<td>" + fmtStat(b.time_seconds, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.time_seconds) + '">' + (delta.time_seconds ? delta.time_seconds + "s" : "—") + "</td></tr>";
+      }
+
+      // Tokens (only show row if data exists)
+      if (a.tokens || b.tokens) {
+        html += "<tr><td><strong>Tokens</strong></td>";
+        html += "<td>" + fmtStat(a.tokens, false) + "</td>";
+        html += "<td>" + fmtStat(b.tokens, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.tokens) + '">' + (delta.tokens || "—") + "</td></tr>";
+      }
+
+      html += "</tbody></table>";
+
+      // Per-eval breakdown (if runs data available)
+      const runs = data.runs || [];
+      if (runs.length > 0) {
+        const evalIds = [...new Set(runs.map(r => r.eval_id))].sort((a, b) => a - b);
+
+        html += "<h3 style='font-family: Poppins, sans-serif; margin-bottom: 0.75rem;'>Per-Eval Breakdown</h3>";
+
+        const hasTime = runs.some(r => r.result && r.result.time_seconds != null);
+        const hasErrors = runs.some(r => r.result && r.result.errors > 0);
+
+        for (const evalId of evalIds) {
+          const evalRuns = runs.filter(r => r.eval_id === evalId);
+          const evalName = evalRuns[0] && evalRuns[0].eval_name ? evalRuns[0].eval_name : "Eval " + evalId;
+
+          html += "<h4 style='font-family: Poppins, sans-serif; margin: 1rem 0 0.5rem; color: var(--text);'>" + escapeHtml(evalName) + "</h4>";
+          html += '<table class="benchmark-table">';
+          html += "<thead><tr><th>Config</th><th>Run</th><th>Pass Rate</th>";
+          if (hasTime) html += "<th>Time (s)</th>";
+          if (hasErrors) html += "<th>Crashes During Execution</th>";
+          html += "</tr></thead>";
+          html += "<tbody>";
+
+          // Group by config and render with average rows
+          const configGroups = [...new Set(evalRuns.map(r => r.configuration))];
+          for (let ci = 0; ci < configGroups.length; ci++) {
+            const config = configGroups[ci];
+            const configRuns = evalRuns.filter(r => r.configuration === config);
+            if (configRuns.length === 0) continue;
+
+            const rowClass = ci === 0 ? "benchmark-row-with" : "benchmark-row-without";
+            const configLabel = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+
+            for (const run of configRuns) {
+              const r = run.result || {};
+              const prClass = r.pass_rate >= 0.8 ? "benchmark-delta-positive" : r.pass_rate < 0.5 ? "benchmark-delta-negative" : "";
+              html += '<tr class="' + rowClass + '">';
+              html += "<td>" + configLabel + "</td>";
+              html += "<td>" + run.run_number + "</td>";
+              html += '<td class="' + prClass + '">' + ((r.pass_rate || 0) * 100).toFixed(0) + "% (" + (r.passed || 0) + "/" + (r.total || 0) + ")</td>";
+              if (hasTime) html += "<td>" + (r.time_seconds != null ? r.time_seconds.toFixed(1) : "—") + "</td>";
+              if (hasErrors) html += "<td>" + (r.errors || 0) + "</td>";
+              html += "</tr>";
+            }
+
+            // Average row
+            const rates = configRuns.map(r => (r.result || {}).pass_rate || 0);
+            const avgRate = rates.reduce((a, b) => a + b, 0) / rates.length;
+            const avgPrClass = avgRate >= 0.8 ? "benchmark-delta-positive" : avgRate < 0.5 ? "benchmark-delta-negative" : "";
+            html += '<tr class="benchmark-row-avg ' + rowClass + '">';
+            html += "<td>" + configLabel + "</td>";
+            html += "<td>Avg</td>";
+            html += '<td class="' + avgPrClass + '">' + (avgRate * 100).toFixed(0) + "%</td>";
+            if (hasTime) {
+              const times = configRuns.map(r => (r.result || {}).time_seconds).filter(t => t != null);
+              html += "<td>" + (times.length ? (times.reduce((a, b) => a + b, 0) / times.length).toFixed(1) : "—") + "</td>";
+            }
+            if (hasErrors) html += "<td></td>";
+            html += "</tr>";
+          }
+          html += "</tbody></table>";
+
+          // Per-assertion detail for this eval
+          const runsWithExpectations = {};
+          for (const config of configGroups) {
+            runsWithExpectations[config] = evalRuns.filter(r => r.configuration === config && r.expectations && r.expectations.length > 0);
+          }
+          const hasAnyExpectations = Object.values(runsWithExpectations).some(runs => runs.length > 0);
+          if (hasAnyExpectations) {
+            // Collect all unique assertion texts across all configs
+            const allAssertions = [];
+            const seen = new Set();
+            for (const config of configGroups) {
+              for (const run of runsWithExpectations[config]) {
+                for (const exp of (run.expectations || [])) {
+                  if (!seen.has(exp.text)) {
+                    seen.add(exp.text);
+                    allAssertions.push(exp.text);
+                  }
+                }
+              }
+            }
+
+            html += '<table class="benchmark-table" style="margin-top: 0.5rem;">';
+            html += "<thead><tr><th>Assertion</th>";
+            for (const config of configGroups) {
+              const label = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+              html += "<th>" + escapeHtml(label) + "</th>";
+            }
+            html += "</tr></thead><tbody>";
+
+            for (const assertionText of allAssertions) {
+              html += "<tr><td>" + escapeHtml(assertionText) + "</td>";
+
+              for (const config of configGroups) {
+                html += "<td>";
+                for (const run of runsWithExpectations[config]) {
+                  const exp = (run.expectations || []).find(e => e.text === assertionText);
+                  if (exp) {
+                    const cls = exp.passed ? "benchmark-delta-positive" : "benchmark-delta-negative";
+                    const icon = exp.passed ? "\u2713" : "\u2717";
+                    html += '<span class="' + cls + '" title="Run ' + run.run_number + ': ' + escapeHtml(exp.evidence || "") + '">' + icon + "</span> ";
+                  } else {
+                    html += "— ";
+                  }
+                }
+                html += "</td>";
+              }
+              html += "</tr>";
+            }
+            html += "</tbody></table>";
+          }
+        }
+      }
+
+      // Notes
+      if (notes.length > 0) {
+        html += '<div class="benchmark-notes">';
+        html += "<h3>Analysis Notes</h3>";
+        html += "<ul>";
+        for (const note of notes) {
+          html += "<li>" + escapeHtml(note) + "</li>";
+        }
+        html += "</ul></div>";
+      }
+
+      container.innerHTML = html;
+    }
+
+    // ---- Start ----
+    init();
+    renderBenchmark();
+  </script>
+</body>
+</html>

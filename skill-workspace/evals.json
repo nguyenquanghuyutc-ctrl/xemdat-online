@@ -1,0 +1,41 @@
+{
+  "skill_name": "appsheet-bds-cong-nghiep",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Tôi cần thiết kế module Pipeline Sale cho hệ thống quản lý giao dịch BĐS công nghiệp. Sale của tôi hay quên cập nhật trạng thái deal, không biết deal nào đang ở bước nào. Giúp tôi thiết kế module này trong AppSheet.",
+      "expected_output": "Thiết kế AppSheet module Pipeline với stage enum đầy đủ, cấu trúc bảng cụ thể, automation nhắc nhở sale, security filter phân quyền, và UX view tối ưu mobile",
+      "assertions": [
+        {"id": "has_stage_enum", "text": "Đề xuất đầy đủ các Stage/Status enum cho pipeline"},
+        {"id": "has_table_structure", "text": "Có cấu trúc bảng cụ thể với tên cột và kiểu dữ liệu"},
+        {"id": "has_automation", "text": "Có ít nhất 1 automation/reminder cho sale cập nhật deal"},
+        {"id": "has_security_filter", "text": "Có security filter phân quyền sale chỉ thấy deal của mình"},
+        {"id": "mobile_ux_mentioned", "text": "Đề cập đến UX mobile hoặc thiết kế cho sale ngoài thực địa"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Thiết kế toàn bộ cấu trúc database cho hệ thống AppSheet quản lý nguồn đất BĐS công nghiệp. Hệ thống cần lưu thông tin chủ đất, lô đất, và kết nối với pipeline bán hàng.",
+      "expected_output": "Cấu trúc đầy đủ các bảng với tên cột, kiểu dữ liệu, Ref relationships, Key columns, Status enum, và có trường GPS/vị trí cho lô đất",
+      "assertions": [
+        {"id": "has_three_tables", "text": "Đề xuất ít nhất 3 bảng: NGUON_DAT, CHU_DAT, và PIPELINE hoặc tương đương"},
+        {"id": "has_ref_relationships", "text": "Có Ref relationships giữa các bảng được định nghĩa rõ"},
+        {"id": "has_key_columns", "text": "Mỗi bảng có Key column được chỉ định"},
+        {"id": "has_status_enum", "text": "Có trường Status/Enum để tracking trạng thái"},
+        {"id": "has_gps_or_location", "text": "Đề xuất lưu thông tin vị trí (GPS/địa chỉ) cho lô đất"}
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Tôi cần tạo proposal và báo giá để chào hàng cho một công ty BĐS công nghiệp muốn xây dựng hệ thống quản lý giao dịch trên AppSheet. Họ có khoảng 10 sale, 2 kế toán. Làm proposal chuyên nghiệp.",
+      "expected_output": "Proposal đầy đủ với 2-3 gói dịch vụ, giá cụ thể bằng số, timeline triển khai, phạm vi công việc, và điều khoản support",
+      "assertions": [
+        {"id": "has_three_packages", "text": "Có ít nhất 2-3 gói dịch vụ với mức giá khác nhau"},
+        {"id": "has_specific_pricing", "text": "Có giá cụ thể bằng số (VNĐ hoặc USD), không phải 'liên hệ'"},
+        {"id": "has_timeline", "text": "Có timeline triển khai cụ thể theo tuần/giai đoạn"},
+        {"id": "has_scope_of_work", "text": "Có phạm vi công việc (deliverables) được liệt kê"},
+        {"id": "has_support_terms", "text": "Có điều khoản bảo hành/support sau triển khai"}
+      ]
+    }
+  ]
+}

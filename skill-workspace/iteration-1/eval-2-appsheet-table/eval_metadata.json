@@ -1,0 +1,12 @@
+{
+  "eval_id": 2,
+  "eval_name": "appsheet-database-structure",
+  "prompt": "Thiết kế toàn bộ cấu trúc database cho hệ thống AppSheet quản lý nguồn đất BĐS công nghiệp. Hệ thống cần lưu thông tin chủ đất, lô đất, và kết nối với pipeline bán hàng.",
+  "assertions": [
+    {"id": "has_three_tables", "description": "Đề xuất ít nhất 3 bảng: NGUON_DAT, CHU_DAT, và PIPELINE hoặc tương đương"},
+    {"id": "has_ref_relationships", "description": "Có Ref relationships giữa các bảng được định nghĩa rõ"},
+    {"id": "has_key_columns", "description": "Mỗi bảng có Key column được chỉ định"},
+    {"id": "has_status_enum", "description": "Có trường Status/Enum để tracking trạng thái"},
+    {"id": "has_gps_or_location", "description": "Đề xuất lưu thông tin vị trí (GPS/địa chỉ) cho lô đất"}
+  ]
+}

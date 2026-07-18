@@ -1,0 +1,12 @@
+{
+  "eval_id": 1,
+  "eval_name": "pipeline-sale-design",
+  "prompt": "Tôi cần thiết kế module Pipeline Sale cho hệ thống quản lý giao dịch BĐS công nghiệp. Sale của tôi hay quên cập nhật trạng thái deal, không biết deal nào đang ở bước nào. Giúp tôi thiết kế module này trong AppSheet.",
+  "assertions": [
+    {"id": "has_stage_enum", "description": "Đề xuất đầy đủ các Stage/Status enum cho pipeline"},
+    {"id": "has_table_structure", "description": "Có cấu trúc bảng cụ thể với tên cột và kiểu dữ liệu"},
+    {"id": "has_automation", "description": "Có ít nhất 1 automation/reminder cho sale cập nhật deal"},
+    {"id": "has_security_filter", "description": "Có security filter phân quyền sale chỉ thấy deal của mình"},
+    {"id": "mobile_ux_mentioned", "description": "Đề cập đến UX mobile hoặc thiết kế cho sale ngoài thực địa"}
+  ]
+}

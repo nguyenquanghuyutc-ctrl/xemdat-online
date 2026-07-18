@@ -1,0 +1,240 @@
+{
+  "runs": [
+    {
+      "eval_id": 1,
+      "eval_name": "Pipeline Sale Design",
+      "config": "with_skill",
+      "pass_rate": 1.0,
+      "passed": 5,
+      "total": 5,
+      "duration_seconds": 108.2,
+      "total_tokens": 20182,
+      "assertions": [
+        {
+          "text": "stage/status enum",
+          "passed": true,
+          "evidence": "Found 'quan tâm'"
+        },
+        {
+          "text": "table structure with columns",
+          "passed": true,
+          "evidence": "Found 'pipeline_sale'"
+        },
+        {
+          "text": "automation reminder",
+          "passed": true,
+          "evidence": "Found 'automation'"
+        },
+        {
+          "text": "security filter",
+          "passed": true,
+          "evidence": "Found 'security'"
+        },
+        {
+          "text": "mobile UX",
+          "passed": true,
+          "evidence": "Found 'mobile'"
+        }
+      ]
+    },
+    {
+      "eval_id": 1,
+      "eval_name": "Pipeline Sale Design",
+      "config": "without_skill",
+      "pass_rate": 1.0,
+      "passed": 5,
+      "total": 5,
+      "duration_seconds": 103.2,
+      "total_tokens": 15024,
+      "assertions": [
+        {
+          "text": "stage/status enum",
+          "passed": true,
+          "evidence": "Found 'đàm phán'"
+        },
+        {
+          "text": "table structure with columns",
+          "passed": true,
+          "evidence": "Found 'column'"
+        },
+        {
+          "text": "automation reminder",
+          "passed": true,
+          "evidence": "Found 'automation'"
+        },
+        {
+          "text": "security filter",
+          "passed": true,
+          "evidence": "Found 'security'"
+        },
+        {
+          "text": "mobile UX",
+          "passed": true,
+          "evidence": "Found 'mobile'"
+        }
+      ]
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "Database Structure Design",
+      "config": "with_skill",
+      "pass_rate": 1.0,
+      "passed": 5,
+      "total": 5,
+      "duration_seconds": 137.1,
+      "total_tokens": 22152,
+      "assertions": [
+        {
+          "text": "3+ tables",
+          "passed": true,
+          "evidence": "Found 'nguon_dat'"
+        },
+        {
+          "text": "ref relationships",
+          "passed": true,
+          "evidence": "Found 'ref →'"
+        },
+        {
+          "text": "key columns",
+          "passed": true,
+          "evidence": "Found 'key'"
+        },
+        {
+          "text": "status enum",
+          "passed": true,
+          "evidence": "Found 'enum'"
+        },
+        {
+          "text": "GPS/location",
+          "passed": true,
+          "evidence": "Found 'gps'"
+        }
+      ]
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "Database Structure Design",
+      "config": "without_skill",
+      "pass_rate": 1.0,
+      "passed": 5,
+      "total": 5,
+      "duration_seconds": 129.8,
+      "total_tokens": 17751,
+      "assertions": [
+        {
+          "text": "3+ tables",
+          "passed": true,
+          "evidence": "Found 'pipeline'"
+        },
+        {
+          "text": "ref relationships",
+          "passed": true,
+          "evidence": "Found 'ref →'"
+        },
+        {
+          "text": "key columns",
+          "passed": true,
+          "evidence": "Found 'key'"
+        },
+        {
+          "text": "status enum",
+          "passed": true,
+          "evidence": "Found 'enum'"
+        },
+        {
+          "text": "GPS/location",
+          "passed": true,
+          "evidence": "Found 'gps'"
+        }
+      ]
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "Proposal & Pricing",
+      "config": "with_skill",
+      "pass_rate": 1.0,
+      "passed": 5,
+      "total": 5,
+      "duration_seconds": 179.8,
+      "total_tokens": 25392,
+      "assertions": [
+        {
+          "text": "2-3 packages",
+          "passed": true,
+          "evidence": "Found 'basic'"
+        },
+        {
+          "text": "specific price numbers",
+          "passed": true,
+          "evidence": "Found '45.000.000'"
+        },
+        {
+          "text": "timeline by week/phase",
+          "passed": true,
+          "evidence": "Found 'tuần 1'"
+        },
+        {
+          "text": "scope of work",
+          "passed": true,
+          "evidence": "Found 'phạm vi'"
+        },
+        {
+          "text": "support/warranty terms",
+          "passed": true,
+          "evidence": "Found 'bảo hành'"
+        }
+      ]
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "Proposal & Pricing",
+      "config": "without_skill",
+      "pass_rate": 0.8,
+      "passed": 4,
+      "total": 5,
+      "duration_seconds": 152.2,
+      "total_tokens": 18455,
+      "assertions": [
+        {
+          "text": "2-3 packages",
+          "passed": true,
+          "evidence": "Found 'gói'"
+        },
+        {
+          "text": "specific price numbers",
+          "passed": false,
+          "evidence": "Not found"
+        },
+        {
+          "text": "timeline by week/phase",
+          "passed": true,
+          "evidence": "Found 'tuần 1'"
+        },
+        {
+          "text": "scope of work",
+          "passed": true,
+          "evidence": "Found 'phạm vi'"
+        },
+        {
+          "text": "support/warranty terms",
+          "passed": true,
+          "evidence": "Found 'bảo hành'"
+        }
+      ]
+    }
+  ],
+  "summary": [
+    {
+      "config": "with_skill",
+      "avg_pass_rate": 1.0,
+      "avg_duration_seconds": 141.7,
+      "avg_tokens": 22575
+    },
+    {
+      "config": "without_skill",
+      "avg_pass_rate": 0.933,
+      "avg_duration_seconds": 128.4,
+      "avg_tokens": 17077
+    }
+  ]
+}
